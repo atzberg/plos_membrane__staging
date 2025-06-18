@@ -2280,14 +2280,6 @@ def compute_B_j__interface(Y,params,extras):
 
   if flag_save is None:
     flag_save = False; 
- 
-#  if bar_K_j is None:
-#    bar_K_j,bar_K_j_indices = \
-#      compute_bar_K_j__conc(Y,params,extras);
-#    if extras is not None:
-#      extras_matrix_vec_div = \
-#        extras['extras_matrix_vec_div'];
-#      extras_K_ovdc_dot_G = extras['extras_K_ovdc_dot_G'];
 
   extras_R_ovdc = {};
   if extras_matrix_vec_div is not None:
@@ -2306,13 +2298,7 @@ def compute_B_j__interface(Y,params,extras):
   # compute interface tensor 
   ii = c_v_I; 
   j = ii['interface']; c_I = c_v[j];
-  # The interface here only serves to exchange heat between the particle and conc fields.
-  # In previous work, we put some of the particle exchanges into the interface tensor.
-  # This just involves the three temperature fields. 
-  #
-  # we break down the generation of fluctuations into parts 
-  # so that g = R_1 x_1 + R_2 x_2.  This can be combined into
-  # one large B matrix of the form B=[R_1|R_2] for xi = [xi_1|x_2]^T.
+
   n1 = num_particle_theta + num_conc_theta + num_interface_theta;
   n2 = num_particle_theta + num_conc_theta + num_interface_theta;  
  
@@ -2341,7 +2327,7 @@ def compute_B_j__interface(Y,params,extras):
   nn_theta = num_particle_theta + num_interface_theta
   R_21 = np.zeros((nn_theta,num_particle_theta)); # is just a vector 
 
-  R_21[0,0] = np.sqrt(kappa_P_I*theta_P[0]*theta_I[0])*(1.0/c_P); # WARNING: assume 1 particle  
+  R_21[0,0] = np.sqrt(kappa_P_I*theta_P[0]*theta_I[0])*(1.0/c_P); 
   R_21[1,0] = np.sqrt(kappa_P_I*theta_P[0]*theta_I[0])*(-1.0/c_I); 
   
   # copy R_21 into B_j 
@@ -2364,9 +2350,6 @@ def compute_B_j__interface(Y,params,extras):
   R_22_x[i1_R22_theta_C,:] = np.sqrt(kappa_C_I_xx_dx*theta_C*theta_I)*(1.0/(c_C*deltaV)); # scaling by deltaV 
   R_22_x[i1_R22_theta_I,:] = -np.sqrt(kappa_C_I_xx_dx*theta_C*theta_I)*(1.0/c_I); # set last row
 
-  #R_22_x = R_22_x/deltaV; # @@@ deltaV scaling suggested by numerical studies 
-
-  # @@@ check indexing below
   # copy into B_j 
   i1 = i1_B_theta_C; i2 = i1 + num_conc_theta;
   ii_range = range(i1,i2); 
@@ -2374,15 +2357,13 @@ def compute_B_j__interface(Y,params,extras):
   jj_range = range(j1,j2);
   B_j[ii_range,jj_range] += R_22_x[i1_R22_theta_C,:];
 
-  # @@@ check indexing below
-  #i1 = i1_B_theta_I; i2 = i1 + num_interface_theta;
   ii_range = i1_B_theta_I*np.ones(num_conc_theta,dtype=int);
   j1 = j1_B_theta_C; j2 = j1 + num_conc_theta;
   jj_range = range(j1,j2);
   B_j[ii_range,jj_range] += R_22_x[i1_R22_theta_I,:];  
  
-  I_in = None; # signal not relevant since random noise generation 
-  I_local_in = None; # signal not relevant since random noise generation 
+  I_in = None; 
+  I_local_in = None; 
   I1_theta1 = 0; I2_theta1 = I1_theta1 + num_particle_theta;
   I1_theta2 = I2_theta1; I2_theta2 = I1_theta2 + num_conc_theta;
   I1_theta3 = I2_theta2; I2_theta3 = I1_theta3 + num_interface_theta;
@@ -2399,11 +2380,6 @@ def compute_B_j__interface(Y,params,extras):
   return B_j,B_j_indexing; 
 
 def compute_B_j_factors__conc(Y,params=None,extras=None):
-  """
-  Uses factorization of $bar_K_j = N_E K_0 N_E^*$ and 
-  $bar_K_j = M_E K_0 M_E^*$ to compute the needed 
-  factors for the noise generation $RR^T = K$ 
-  """
   
   Y_I,c_v,c_v_I = tuple(map(
     params.get,['Y_I','c_v','c_v_I']));
@@ -2454,17 +2430,6 @@ def compute_B_j_factors__conc(Y,params=None,extras=None):
 
 def compute_g_thm_j_dt__conc(Y_n,params,extras=None):
   # Compute fluctuation constributions.
-  #
-  # For a summary, see pg. 26 of 
-  # H. Ottinger book, Beyond Eqilibrium.
-  #
-  # We combine this with our factorizations
-  # and other results. 
-  #
-  # g_thm dt =  k_B*div_Y(K)dt + B(Y)*dW_t,
-  # where, 
-  # B(Y)B(Y)^T = 2*k_B K(Y).
-  #
 
   num_dim,k_B,Y_I,deltaT,flag_save_B_j_tensors,flag_compute_div_K = \
     tuple(map(params.get,['num_dim','k_B','Y_I','deltaT',
