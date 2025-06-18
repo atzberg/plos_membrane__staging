@@ -895,72 +895,6 @@ def save_data(params,extras):
 
   export_data(output_data);
 
-def init_0(params):
-  Y_I = params['Y_I'];
-  num_mesh_x,num_mesh_y,deltaX = \
-    tuple(map(params.get,['num_mesh_x','num_mesh_y','deltaX']));
-  Lx = num_mesh_x*deltaX; Ly = num_mesh_y*deltaX;
-
-  I1_particle_q,I2_particle_q = tuple(map(
-    Y_I.get,['I1_particle_q','I2_particle_q']));
-  I1_particle_theta,I2_particle_theta = tuple(map(
-    Y_I.get,['I1_particle_theta','I2_particle_theta']));
-
-  I1_conc_q,I2_conc_q = tuple(map(
-    Y_I.get,['I1_conc_q','I2_conc_q']));
-  I1_conc_theta,I2_conc_theta = tuple(map(
-    Y_I.get,['I1_conc_theta','I2_conc_theta']));
-
-  I1_interface_q,I2_interface_q = tuple(map(    
-    Y_I.get,['I1_interface_q','I2_interface_q']));
-  I1_interface_theta,I2_interface_theta = tuple(map(
-    Y_I.get,['I1_interface_theta','I2_interface_theta']));
-
-  num_particle_q = I2_particle_q - I1_particle_q;
-  num_particle_theta = I2_particle_theta - I1_particle_theta;
-
-  num_conc_q = I2_conc_q - I1_conc_q;
-  num_conc_theta = I2_conc_theta - I1_conc_theta;
-
-  num_interface_q = I2_interface_q - I1_interface_q;
-  num_interface_theta = I2_interface_theta - I1_interface_theta;
-
-  Y_0 = np.zeros(Y_I['I2_interface_theta']); ii = Y_I
-
-  # particle
-  num_particles = params['num_particles']; 
-  particle_q = np.zeros(num_particles*num_dim);
-  particle_q[0*num_dim:1*num_dim] = np.array([Lx/2.0,Ly/2.0]);
-  particle_theta = np.zeros(num_particles) + 3.0;
-
-  sne.set_comp(Y_0,'I1_particle_q','I2_particle_q',Y_I,particle_q);
-  sne.set_comp(Y_0,'I1_particle_theta','I2_particle_theta',Y_I,particle_theta);
-
-  # conc
-  conc_q = np.zeros(num_conc_q) + 1.1;
-  x1,x2,Lx,Ly = sne.get_mesh_coord(params); k1 = 1.0; k2 = 1.0;
-  xx = np.vstack((x1,x2)).T;
-  #conc_q[:] = 2.0 + 0.5*np.sin(2.0*np.pi*k1*x1/Lx);
- 
-  X_0 = np.array([1.5,1.5]); XX_0 = np.expand_dims(X_0,0);
-  sigma_sq = 0.2*0.2;
-  conc_q[:] = 1.0 + np.exp(-np.sum(np.power((xx - XX_0),2),1)/(2.0*sigma_sq)); 
-
-  conc_theta = np.zeros(num_conc_theta);
-  conc_theta[:] = 3.0 + 0.0*x1; #3.0 + 2.5*np.sin(2.0*np.pi*k1*x1/Lx);
-
-  sne.set_comp(Y_0,'I1_conc_q','I2_conc_q',Y_I,conc_q);
-  sne.set_comp(Y_0,'I1_conc_theta','I2_conc_theta',Y_I,conc_theta);
-
-  # interface
-  interface_q = np.zeros(num_interface_q) + 1.2;
-  interface_theta = np.zeros(num_interface_theta) + particle_theta;
-
-  sne.set_comp(Y_0,'I1_interface_q','I2_interface_q',Y_I,interface_q);
-  sne.set_comp(Y_0,'I1_interface_theta','I2_interface_theta',Y_I,interface_theta);
-
-  return Y_0; 
-
 def get_params(params_filename,params_ext=None):
 
   if params_ext is None:
@@ -1267,11 +1201,7 @@ if flag_copy_codes:
     print("Copying params to archive:\n" + "src = " + str(src) + "\n" 
         + "dst = " + str(dst));
 
-# -- initialize the state $Y = (q,p,theta)$, where 
-#
-# q = (particle_q,conc_q,interface_q)
-# theta = (particle_theta,conc_theta,interface_theta)
-#
+# -- initialize the state 
 if flag_restart_sim:
   time_index = restart_data['time_index'];
   Y_0 = restart_data['Y_0'];
@@ -1288,7 +1218,7 @@ else:
     func_init, = \
       tuple(map(params.get,['func_init']));
   else:
-    func_init = init_0; 
+    raise Exception("need to specify the func_init"); 
 
   Y_0 = func_init(params,extras_init);
   params.update({'Y_0':Y_0,'time_index':0});
@@ -1372,9 +1302,7 @@ extras_update_state.update({'time_index':0,
                             'flag_save_data':True});
 
 # start simulations 
-Y_np1 = np.zeros(Y_n.shape); # make array of the same shape  
-# update state variables to value at current time step
-Y_np1[:] = Y_n[:]; # start as base value (make a copy of values) 
+Y_np1 = np.zeros(Y_n.shape); Y_np1[:] = Y_n[:]; 
 for II in range(0,num_timesteps):
   t = II*deltaT; time_index = II; 
   if flag_verbose >= 1 and II % disp_skip == 0:
