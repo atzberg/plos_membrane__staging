@@ -570,10 +570,7 @@ def compute_K_ovdc_grad(Y,params,extras=None):
   if G is None:
     G = compute_matrix_vec_grad(Y,params);
 
-  # local transpose the individual blocks of the tensor
-  # split into tensor with indexing (mesh_I,tensor_i,tensor_j,mesh_J,vec_i)
-
-  # Changed below for K_ovdc case for concentration
+  # K_ovdc case for concentration
   GG = G.reshape(num_mesh_pts,num_dim,num_mesh_pts);
   c0 = c0_conc;
   factor = np.expand_dims(qr*bar_kappa/(c0*deltaV),(1,2)); # deltaV since D_S_j has deltaV
@@ -1148,7 +1145,7 @@ def compute_conc_particle_interface(Y,params,extras):
     flag_flux_check = False;
 
   if flag_save_energy_flux:
-    energy_flux_list = [];  # one for each irreversible process 
+    energy_flux_list = [];  
 
   Y_parts = dd = get_parts(Y,params);
   conc_q, conc_theta = tuple(map(dd.get,['conc_q','conc_theta']));
@@ -1206,8 +1203,8 @@ def compute_conc_particle_interface(Y,params,extras):
   ii = c_v_I;
   c_P = cc_P = c_v[ii['particle']]; c_C = cc_C = c_v[ii['conc']]; 
   c_I = cc_I = c_v[ii['interface']]; 
-  c_I_inv_dx = cc_I_inv_dx = cc_I/deltaV; # arises since specific heat of c_I per unit volume needed for conc exchange
-  c_C_inv_dx = cc_C_inv_dx = cc_C/deltaV; # arises since specific heat of c_C per unit volume needed for conc exchange
+  c_I_inv_dx = cc_I_inv_dx = cc_I/deltaV; 
+  c_C_inv_dx = cc_C_inv_dx = cc_C/deltaV; 
   c_I_I = partial_tau_u_I_I = cc_I*cc_I; c_I_I_inv_dx = cc_I*cc_I_inv_dx;
   c_C_C = partial_tau_u_C_C = cc_C*cc_C; c_C_C_inv_dx = cc_C*cc_C_inv_dx;
   c_P_P = partial_tau_u_P_P = cc_P*cc_P; c_P_I = partial_tau_u_P_I = cc_P*cc_I; 
