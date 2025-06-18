@@ -1,2 +1,2 @@
-# plos_membrane__staging
+# PLOS
 Simulation codes related to PLOS membrane paper.
