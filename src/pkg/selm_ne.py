@@ -1132,12 +1132,6 @@ def compute_K_ovdc_dot_G(Y,params,extras=None):
 
 
 def compute_conc_K_heat2(Y,params,extras=None):
-  """ K_conc_heat based on a finite-volume-like model using 
-  local transfers similar to Fourier's Law formulated in
-  terms of 1/theta.  Gives final action similar to 
-  central difference Laplacian in terms of temperature.
-  Operator itself operates on 1/theta and is positive 
-  semi-definite.  """
     
   # get params data
   kappa_C_C,num_mesh_x,num_mesh_y,num_dim,c_v,c_v_I,deltaX,Y_I = tuple(map(params.get,
@@ -1189,8 +1183,6 @@ def compute_conc_K_heat2(Y,params,extras=None):
   K_heat[II0,IIjp1] = -c*theta_I0*theta_Ijp1;
   K_heat[II0,IIjm1] = -c*theta_I0*theta_Ijm1;
 
-  #K_heat = K_heat/deltaV; # scaling 1/deltaV for density 
- 
   return K_heat; 
 
 
@@ -1252,10 +1244,7 @@ def compute_bar_K__conc1(Y,params,extras):
     energy_flux_list = [];  # one for each irreversible process 
 
   # concentration case
-  # modification of the fluid case 
-  # note subtle issues implementing correctly the operator, see $\square$ placement in notes.
   j = c_v_I['conc'];  # j = 4  
-  #if flag_save: D_j_list.append(None);
   I1_q = 0; I2_q = I1_q + num_conc_q; 
   I1_theta = I2_q; I2_theta = I2_q + num_conc_theta;
   I_in = {'i1':[I1_conc_q,I1_conc_theta],
@@ -1299,15 +1288,7 @@ def compute_bar_K__conc1(Y,params,extras):
   bar_K_j[I1_q:I2_q,I1_q:I2_q] = aa; 
   # Organize so each divergence tracked as if done separately for each
   # x-location after we already multipled in the c_C*dx/theta_C(x) term.
-  # Hence, $\square$ notation in our notes for this subtle ordering of
-  # operations in this linear operator.  Expand first over the theta columns
-  # appropriately since vector quantities then apply the divergence operator,
-  # so would happen in the correct order (as in notes discussion).  The
-  # operator is given by action of  $\frac{\mbox{\small div}\left(K_{visco}
-  # \square \dot{\mb{F}} \right)}{\partial_\tau u}$
-  aa = K_ovdc_dot_G;  # action operator multiplication by 1/theta_C(x_m) at each x-location 
-  #bb = np.zeros((num_mesh_pts,num_dim,num_mesh_pts)); # num_mesh_pts = num_theta 
-  #aaa = np.expand_dims(aa,1);
+  aa = K_ovdc_dot_G; 
   K_ovdc_square_dot_G = np.zeros((num_mesh_pts*num_dim,num_mesh_pts)); # num_mesh_pts = num_theta 
   for d in range(0,num_dim):
     ii1 = range(d,num_mesh_pts*num_dim,num_dim); jj1 = range(0,num_mesh_pts); 
@@ -1323,7 +1304,6 @@ def compute_bar_K__conc1(Y,params,extras):
   # need to compute as if tensor dot product done at each x-location 
   ii2 = range(I1_theta,I2_theta); jj2 = range(I1_theta,I2_theta);
   for d in range(0,num_dim):
-#    bar_K_j[I1_theta:I2_theta,I1_theta:I2_theta] += np.diag(dot_G[d::num_dim_sq]*K_ovdc_dot_G[d::num_dim_sq]);
     bar_K_j[ii2,jj2] += dot_G[d::num_dim,0]*K_ovdc_dot_G[:,d]; # diagonal takes the square into account
   du = partial_theta_j_u_j;
   bar_K_j[I1_theta:I2_theta,I1_theta:I2_theta] = bar_K_j[I1_theta:I2_theta,I1_theta:I2_theta]/(du*du); # @optimize, only needs diagonal
@@ -1378,7 +1358,6 @@ def compute_D_j_inv_particle(Y,params,extras=None):
   interface_q,interface_p,interface_theta = tuple(map(dd.get,['interface_q','interface_p','interface_theta']));
 
   Y_I_parts = dd = get_parts_I(params);
-  # locals().update(**Y_I)  # quick way to make dict elements local variables (not best practice though)
   I1_particle_q,I2_particle_q = tuple(map(dd.get,['I1_particle_q','I2_particle_q']));
   I1_particle_theta,I2_particle_theta = tuple(map(dd.get,['I1_particle_theta','I2_particle_theta']));
 
@@ -1386,7 +1365,6 @@ def compute_D_j_inv_particle(Y,params,extras=None):
   num_interface_q = interface_q.shape[0]; num_interface_theta = interface_theta.shape[0];
 
   num_q = num_particle_q;
-  #D_j = np.zeros((num_p, num_p));   
   D_j_inv = (1.0/gamma_particle)*np.eye(num_q);  
 
   return D_j_inv;
@@ -1401,7 +1379,6 @@ def compute_K_ovd_particle(Y,params,extras=None):
   particle_q,particle_theta = tuple(map(dd.get,['particle_q','particle_theta']));
 
   Y_I_parts = dd = get_parts_I(params);
-  # locals().update(**Y_I)  # quick way to make dict elements local variables (not best practice though)
   I1_particle_q,I2_particle_q = tuple(map(dd.get,['I1_particle_q','I2_particle_q']));
   I1_particle_theta,I2_particle_theta = tuple(map(dd.get,['I1_particle_theta','I2_particle_theta']));
 
@@ -1489,10 +1466,7 @@ def compute_bar_K__overdamped_particle(Y,params,extras):
     energy_flux_list = [];  # one for each irreversible process 
 
   # particle case
-  # modification of the fluid case 
-  # note subtle issues implementing correctly the operator, see $\square$ placement in notes.
   j = c_v_I['particle'];  # j = 4  
-  #if flag_save: D_j_list.append(None);
   I1_q = 0; I2_q = I1_q + num_particle_q; 
   I1_theta = I2_q; I2_theta = I2_q + num_particle_theta;
   I_in = {'i1':[I1_particle_q,I1_particle_theta],
@@ -1508,8 +1482,6 @@ def compute_bar_K__overdamped_particle(Y,params,extras):
   ii = c_v_I;
   c_P = partial_theta_j_u_j = c_v[ii['particle']]; 
   theta_j = theta_P = particle_theta;
-  #D_j_inv = compute_D_j_inv_particle(Y,params); # compute the inverse D^{-1} tensor
-  #theta_P__D_inv = theta_P*D_j_inv;
   theta_P__D_inv = K_ovd_particle = compute_K_ovd_particle(Y,params,extras);
   dq_U = partial_q_U = compute_partial_q_U(Y,params); # compute energy change in q
   flag_debug = False;
@@ -1581,11 +1553,6 @@ def compute_bar_K__overdamped_particle(Y,params,extras):
 
 
 def compute_D_j_interface_conc(Y,params,extras=None):
-  """
-  Dissipation at the conc-structure interface.  Note, one would need one 
-  temperature for each distinct micro-structure.  This would then correspond to 
-  having a dissipative operator for each of the micro-structures. 
-  """
   Y_I,c_v,c_v_I,deltaX,gamma = tuple(map(
     params.get,['Y_I','c_v','c_v_I','deltaX','gamma']));
   num_particles,num_dim = tuple(map(params.get,['num_particles','num_dim']));
@@ -1607,7 +1574,6 @@ def compute_D_j_interface_conc(Y,params,extras=None):
   interface_q,interface_theta = tuple(map(dd.get,['interface_q','interface_theta']));
 
   Y_I_parts = dd = get_parts_I(params);
-  # locals().update(**Y_I)  # quick way to make dict elements local variables (not best practice though)
   I1_particle_q,I2_particle_q = tuple(map(dd.get,['I1_particle_q','I2_particle_q']));
   I1_particle_theta,I2_particle_theta = tuple(map(dd.get,['I1_particle_theta','I2_particle_theta']));
 
@@ -1620,14 +1586,10 @@ def compute_D_j_interface_conc(Y,params,extras=None):
   num_interface_q = interface_q.shape[0]; num_interface_theta = interface_theta.shape[0];
 
   num_q = num_particle_q + num_conc_q;
-  #D_j = np.zeros((num_p, num_p)); 
   D_j = np.zeros((num_q, num_q));  # assumes only one temperature to track accumulated dissipation energy
  
   # particle drag term from the interface 
   matrix_Gamma_op = compute_matrix_Gamma_op(Y,params); 
-
-  # conc drag term from the interface 
-  #D_j[ii1_conc_q:ii2_conc_q,ii1_conc_q:ii2_conc_q] = 0.0; # @@@ double-check, if need this.. = gamma*np.dot(matrix_Gamma_op.T,matrix_Gamma_op)/(deltaV*deltaV); # factor deltax_sq given energy density for conc # @@@ check 
 
   if flag_save:
     extras.update({'matrix_Gamma_op':matrix_Gamma_op});
@@ -1686,7 +1648,6 @@ def compute_conc_particle_interface(Y,params,extras):
   interface_q,interface_theta = tuple(map(dd.get,['interface_q','interface_theta']));
 
   Y_I_parts = dd = get_parts_I(params);
-  # locals().update(**Y_I)  # quick way to make dict elements local variables (not best practice though)
   I1_conc_q,I2_conc_q = tuple(map(dd.get,['I1_conc_q','I2_conc_q']));
   I1_conc_theta,I2_conc_theta = tuple(map(dd.get,['I1_conc_theta','I2_conc_theta']));
   I1_particle_q,I2_particle_q = tuple(map(dd.get,['I1_particle_q','I2_particle_q']));
@@ -1702,7 +1663,6 @@ def compute_conc_particle_interface(Y,params,extras):
 
   extras_D_j_interface = {'flag_save':True};
   D_j = compute_D_j_interface_conc(Y,params,extras_D_j_interface); ii = c_v_I;
-  #if flag_save: D_j_list.append(D_j);
 
   # interface case
   j = c_v_I['interface'];  # j = 2
@@ -1731,19 +1691,8 @@ def compute_conc_particle_interface(Y,params,extras):
 
   bar_K_j = np.zeros((num_q + num_theta, num_q + num_theta)); 
  
-  #extras_D_j_interface = {'flag_save':True};
-  #D_j = compute_D_j_interface(Y,params,extras_D_j_interface); ii = c_v_I;
-  #if flag_save: D_j_list.append(D_j);
   ii = c_v_I;
   d_tau_u = C_I = partial_theta_I_u_j = partial_theta_j_u_j = c_v[ii['interface']];
-  
-  # interface friction terms 
-  #theta_I = interface_theta; 
-  #bar_K_j[I1_p:I2_p,I1_p:I2_p] = theta_I*D_j; 
-  #bar_K_j[I1_p:I2_p,I1_theta3:I2_theta3] = np.expand_dims(-theta_I*np.dot(D_j,dot_q_fld_dx)/partial_theta_I_u_j,1); 
-  #bar_K_j[I1_theta3:I2_theta3,I1_p:I2_p] = np.transpose(bar_K_j[I1_p:I2_p,I1_theta3:I2_theta3]);
-  ##bar_K_j[j,I1_theta3:I2_theta3,I1_theta3:I2_theta3] = theta_I*np.dot(dot_q,np.dot(D_j,dot_q))/(partial_theta_I_u_j*partial_theta_I_u_j);
-  #bar_K_j[I1_theta3:I2_theta3,I1_theta3:I2_theta3] = np.dot(dot_q_fld_dx,-1.0*bar_K_j[I1_p:I2_p,I1_theta3:I2_theta3])/partial_theta_I_u_j;
 
   # heat exchnage terms between the interface, conc, and particle(s)   
   ii = c_v_I;
@@ -1760,11 +1709,8 @@ def compute_conc_particle_interface(Y,params,extras):
   aa = Gamma_op_vec.reshape(num_particles,num_dim,num_mesh_pts,num_dim);
   Gamma_op = Gamma_op_scalar = aa[:,0,:,0].reshape(num_particles,num_mesh_pts); # get scalar operator
   Lambda_op = Gamma_op.T;
-  #kappa_C_I_dx = kappa_C_I*Lambda_op.flatten();  # spatial dependence of thermal conductivity
   kappa_C_I_xx_dx = kappa_C_I*Lambda_op.flatten();  # spatial dependence of thermal conductivity
   kappa_C_I_xx = kappa_C_I_xx_dx/deltaV;  # spatial dependence of thermal conductivity (so integrates)
-  # these scalings follow, since we want conservation of internal energies in heat exchanges 
-  # E[theta_C,theta_I] = sum_m c_C*theta_C(x_m) deltaV + c_I*theta_I.
   
   bar_K_j[I1_theta1:I2_theta1,I1_theta1:I2_theta1] = kappa_P_I*theta_I*theta_P/c_P_P; 
   bar_K_j[I1_theta1:I2_theta1,I1_theta3:I2_theta3] = -kappa_P_I*theta_P*theta_I/c_P_I;
@@ -1788,7 +1734,7 @@ def compute_conc_particle_interface(Y,params,extras):
   # -- compute additional data
   if flag_save_energy_flux or flag_flux_check:
     rate_kinetic_particle = 0;
-    rate_heat_particle = 0.0; # @@@#np.sum(np.dot(bar_K_j[I1_theta:I2_theta,I1_theta:I2_theta],(c_P/theta_P)))*c_P;
+    rate_heat_particle = 0.0; 
     rate_total = rate_kinetic_particle + rate_heat_particle; 
 
   if flag_save_energy_flux:
@@ -1797,15 +1743,6 @@ def compute_conc_particle_interface(Y,params,extras):
     energy_flux['rate_heat_particle'] = rate_heat_particle;
     energy_flux['rate_total'] = rate_total;
     energy_flux_list.append(energy_flux); 
-
-  # check the energy exchanges (kinetic to heat energy)
-  if flag_flux_check:
-    print("");
-    print("checking energy exchanges for particle:"); 
-    print("rate_kinetic_particle = %.3e"%rate_kinetic_particle);
-    print("rate_heat_particle = %.3e"%rate_heat_particle); 
-    print("rate_total = %.1e"%rate_total);
-    print("");
 
   if flag_save_energy_flux:
     extras.update({'energy_flux_list':energy_flux_list}); 
@@ -1964,7 +1901,6 @@ def compute_R_ovd_particle(Y,params,extras=None):
   if flag_save is None:
     flag_save = False;
  
-  #R_ovd = np.zeros((num_particle_q,num_particle_q)); 
   theta_P = particle_theta; 
   R_ovd = np.sqrt(theta_P/gamma_particle)*np.eye(num_particle_q);
     
@@ -2027,7 +1963,7 @@ def compute_R_ovdc(Y,params,extras=None):
   
   R_ovdc = R_ovdc/np.sqrt(deltaV); # scaling by (1/deltaV)^{1/2} needed for density
  
-  if extras is not None and 'dot_G' in extras: # warning: invalidate, so do not forget to update each time 
+  if extras is not None and 'dot_G' in extras: 
     extras.update({'dot_G':None}); 
 
   if flag_save: 
@@ -2037,23 +1973,13 @@ def compute_R_ovdc(Y,params,extras=None):
 
 
 def compute_R_heat2__conc(Y,params,extras):
+  """ Compute the factor $K_heat = RR^T$. """
 
-  """ 
-    Compute the factor $K_heat = RR^T$.
-
-    This uses the discrete operator based on finite-volume-like method
-    and boxes.   This yields the factorization of the form 
-  
-    R = -D, where 
-    $[G (1/\theta)]_{(I_1 + I_2)/2} = s_{I_1,I_2}\sqrt{\theta_{I_1}\theta_{I_2}}\left(1/\theta_{I_2} - 1/\theta_{I_1}
-    \right)$, where $s_{I_1,I_2} = -1$ is $I_1 < I_2$ and $+1$ otherwise.  We claim
-     that in fact we have $K_{heat} = -D\cdot G$ gives the operator. 
-
-  """
   # get params data
   kappa_C_C,c0_conc,num_mesh_x,num_mesh_y,num_dim,c_v,c_v_I,deltaX,mu,Y_I = \
     tuple(map(params.get,['kappa_C_C','c0_conc','num_mesh_x','num_mesh_y',
                           'num_dim','c_v','c_v_I','deltaX','mu','Y_I']));
+
   num_mesh_pts = num_mesh_x*num_mesh_y;
   num_dim_sq = num_dim*num_dim; # tensor dimension 
   deltaV = deltaX_sq = deltaX*deltaX;
@@ -2094,9 +2020,6 @@ def compute_R_heat2__conc(Y,params,extras):
   theta_Ijp1 = conc_theta[IIjp1];
   theta_Ijm1 = conc_theta[IIjm1];
 
-  # we use staggered convention that I0^(d) is always 
-  # to the left or below the cell-center I0^{d).
-  # we construct the weighted gradient operator (wG) 
   c = np.sqrt(kappa_C_C/(c_C*c_C*deltaV));
   wG[II0,0,II0] = c*np.sqrt(theta_I0*theta_Iim1);
   wG[II0,0,IIim1] = -c*np.sqrt(theta_I0*theta_Iim1);
@@ -2153,12 +2076,9 @@ def compute_B_j__particle(Y,params,extras):
 
   n1 = num_particle_q + num_particle_theta;
   n2 = num_particle_q + num_particle_theta;
-  #B_j = sqrt_two_k_B*np.zeros((n1,n2));
   B_j = np.zeros((n1,n2));
 
   # compute the entries
-  # R_D_inv = gamma_particle*np.eye(num_particle_q);
-  # K_ovd = compute_K_ovd_particle(Y,params,extras); 
   R_ovd = compute_R_ovd_particle(Y,params,extras); 
   partial_q_U = compute_partial_q_U(Y,params); 
   partial_q_U_T = partial_q_U.T; 
@@ -2237,14 +2157,6 @@ def compute_B_j__conc_field(Y,params,extras):
   if flag_save is None:
     flag_save = False; 
  
-#  if bar_K_j is None:
-#    bar_K_j,bar_K_j_indices = \
-#      compute_bar_K_j__conc(Y,params,extras);
-#    if extras is not None:
-#      extras_matrix_vec_div = \
-#        extras['extras_matrix_vec_div'];
-#      extras_K_ovdc_dot_G = extras['extras_K_ovdc_dot_G'];
-
   extras_R_ovdc = {};
   if extras_matrix_vec_div is not None:
     extras_R_ovdc.update({'matrix_vec_div':extras_matrix_vec_div['D'],
