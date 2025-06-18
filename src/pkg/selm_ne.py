@@ -275,19 +275,19 @@ def set_comp(Y,i1_str,i2_str,Y_I,val):
 
 
 def add_in_components(Y_out,a_out,I_out,I_local_out): 
-  ii1_list = I_out['i1']; ii2_list = I_out['i2']; # output indices
-  i1_list = I_local_out['i1']; i2_list = I_local_out['i2']; # internal indices
-  for k in range(0,len(i1_list)): # transfer results into correct components of Y
+  ii1_list = I_out['i1']; ii2_list = I_out['i2']; 
+  i1_list = I_local_out['i1']; i2_list = I_local_out['i2']; 
+  for k in range(0,len(i1_list)): 
     i1 = i1_list[k]; i2 = i2_list[k];
     ii1 = ii1_list[k]; ii2 = ii2_list[k];
     Y_out[ii1:ii2] += a_out[i1:i2];
 
 def add_in_matrix_entries(A,B,I_out,I_in,I_local_out,I_local_in): 
-  ii1_list = I_out['i1']; ii2_list = I_out['i2']; # output indices
-  jj1_list = I_in['i1']; jj2_list = I_in['i2']; # output indices
-  i1_list = I_local_out['i1']; i2_list = I_local_out['i2']; # internal indices
-  j1_list = I_local_in['i1']; j2_list = I_local_in['i2']; # internal indices
-  for k in range(0,len(i1_list)): # transfer results into correct entries of A
+  ii1_list = I_out['i1']; ii2_list = I_out['i2']; 
+  jj1_list = I_in['i1']; jj2_list = I_in['i2']; 
+  i1_list = I_local_out['i1']; i2_list = I_local_out['i2']; 
+  j1_list = I_local_in['i1']; j2_list = I_local_in['i2']; 
+  for k in range(0,len(i1_list)): 
     i1 = i1_list[k]; i2 = i2_list[k];
     j1 = j1_list[k]; j2 = j2_list[k];
     ii1 = ii1_list[k]; ii2 = ii2_list[k];
@@ -301,8 +301,6 @@ def get_parts_I(params):
   return params['Y_I'];
 
 def map_particle_periodic(Y,params):
-  """ Map particles mod L to the periodic domain"""
-
   Y_I = params['Y_I']; num_dim = params['num_dim'];
   num_mesh_x,num_mesh_y,deltaX = tuple(map(params.get,['num_mesh_x','num_mesh_y','deltaX']));
   Lx = num_mesh_x*deltaX; Ly = num_mesh_y*deltaX;
@@ -430,11 +428,7 @@ def compute_matrix_vec_div(Y,params,extras=None):
   return D;
 
 def compute_matrix_tensor_grad(Y,params,extras=None):
-  """ Gradient acting on tensor fields, such as $\nabla u$.  Construct this to
-      be the transpose of the divergence.  We could just transpose the 
-      divergence matrix constructed.  We do a separate implementation to help 
-      verify codes.  Can validate against the divergence matrix.  
-  """
+  """ Gradient acting on tensor fields, such as $\nabla u$.  """
 
   # get params data 
   num_mesh_x,num_mesh_y,num_dim,deltaX \
@@ -492,11 +486,7 @@ def compute_matrix_tensor_grad(Y,params,extras=None):
 
 def compute_matrix_tensor_grad2(Y,params,extras=None):
   """ Gradient acting on tensor fields with extra averaging to help avoid the
-      checkerboard instability.  Computes consistently $\nabla u$.  Construct 
-      this to be the transpose of the divergence.  We could just transpose the 
-      divergence matrix constructed.  We do a separate implementation to help 
-      verify codes.  Can validate against the divergence matrix.  
-  """
+      checkerboard instability.  Computes consistently $\nabla u$. """
   # get params data 
   num_mesh_x,num_mesh_y,num_dim,deltaX \
     = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
@@ -518,8 +508,6 @@ def compute_matrix_tensor_grad2(Y,params,extras=None):
 
   # grad: maps R^{d} -> R^{dxd}, (maps vector to tensor)
   num_mesh_pts = num_mesh_x*num_mesh_y;
-  #G = np.zeros((num_mesh_pts*num_dim_sq,num_mesh_pts*num_dim));
-  #GG = G.reshape(num_mesh_pts*num_dim_sq,num_mesh_x,num_mesh_y,num_dim);
   GG = np.zeros((num_mesh_pts*num_dim_sq,num_mesh_x,num_mesh_y,num_dim));
 
   Gdir = [];
@@ -605,12 +593,7 @@ def compute_matrix_tensor_grad3(Y,params,extras=None):
 
 
 def compute_matrix_vec_grad(Y,params,extras=None):
-  """ Gradient acting on scalar fields, such as 
-      $\nabla f$.  Construct this to be the transpose of the divergence.  
-      We could just transpose the divergence matrix constructed.  We do a 
-      separate implementation to help verify codes.  Can validate against 
-      the divergence matrix.  
-  """
+  """ Gradient acting on scalar fields, such as $\nabla f$. """
   # get params data 
   num_mesh_x,num_mesh_y,num_dim,deltaX \
     = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
@@ -667,11 +650,6 @@ def compute_matrix_vec_grad2(Y,params,extras=None):
   """ Gradient acting on vec fields with extra 
       averaging to help avoid the checkerboard instability. 
       Computes consistently $\nabla u$.
-      We aim to construct this to be the 
-      transpose of the divergence.  We could 
-      just transpose the divergence matrix constructed. 
-      We do a separate implementation to help verify 
-      codes.  Can validate against the divergence matrix.  
   """
   # get params data 
   num_mesh_x,num_mesh_y,num_dim,deltaX \
@@ -694,8 +672,6 @@ def compute_matrix_vec_grad2(Y,params,extras=None):
 
   # grad: maps R^{d} -> R^{dxd}, (maps vector to tensor)
   num_mesh_pts = num_mesh_x*num_mesh_y;
-  #G = np.zeros((num_mesh_pts*num_dim_sq,num_mesh_pts*num_dim));
-  #GG = G.reshape(num_mesh_pts*num_dim_sq,num_mesh_x,num_mesh_y,num_dim);
   GG = np.zeros((num_mesh_pts*num_dim,num_mesh_x,num_mesh_y));
 
   Gdir = [];
@@ -1006,9 +982,6 @@ def compute_matrix_Gamma_op(Y,params,extras=None):
       matrix_Gamma_op[0,III] += w[i1,i2]*deltaX_sq; # integral operator (x-component)
       matrix_Gamma_op[1,III + 1] += w[i1,i2]*deltaX_sq; # integral operator (y-component)
 
-  #if flag_save: 
-  #  extras.update({'matrix_Gamma_op':matrix_Gamma_op});
-
   return matrix_Gamma_op;
 
 
@@ -1030,306 +1003,6 @@ def compute_matrix_Lambda_op(Y,params,extras=None):
 
   return matrix_Lambda_op;
 
-
-def compute_M_sym(Y,params):
-
-  num_mesh_x = params['num_mesh_x']; num_mesh_y = params['num_mesh_y'];
-  num_dim = params['num_dim'];
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-  deltaX = params['deltaX']; mu = params['mu']; Y_I = params['Y_I'];
-
-  # construct linear operator 
-  # M_sym*A = A + A^T 
-  M_sym = np.zeros((num_dim_sq,num_dim_sq));
-  for a1 in range(0,num_dim):
-    for a2 in range(0,num_dim):
-      i1 = a1*num_dim + a2; j1 = i1; j2 = a2*num_dim + a1;
-      M_sym[i1,j1] += 1.0; M_sym[i1,j2] += 1.0;
-
-  return M_sym; 
-
-def compute_M_sym_factor(Y,params,extras=None):
- 
-  if extras is not None:
-    M_sym,R_sym,flag_save = tuple(map(extras.get,['M_sym','R_sym','flag_save']));
-    if flag_save is None:
-      flag_save = False;  
-  else:
-    M_sym = None; R_sym = None;
-    flag_save = False; 
-   
-  if R_sym is not None:
-    return R_sym; # no need to recompute, just return  
-
-  num_mesh_x = params['num_mesh_x']; num_mesh_y = params['num_mesh_y'];
-  num_dim = params['num_dim'];
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-  deltaX = params['deltaX']; mu = params['mu']; Y_I = params['Y_I'];
-
-  if M_sym is None:
-    M_sym = compute_M_sym(Y,params);
-           
-  # compute using svd the factor, M_sym = RR^T
-  U,S,Vh = np.linalg.svd(M_sym,hermitian=True);
-  sqrt_S = np.diag(np.sqrt(S));
-  R_sym = np.matmul(U,sqrt_S);
-
-  # save calculated results 
-  if flag_save:
-    extras['M_sym'] = M_sym; 
-    extras['R_sym'] = R_sym; 
-
-  return R_sym; 
-
-def compute_dot_F(Y,params,extras=None):
- 
-  if extras is not None:
-    G, = tuple(map(extras.get,['G']));
-  else:
-    G = None;
-
-  if G is None:
-    G = compute_matrix_tensor_grad(Y,params);
- 
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX = tuple(map(params.get,
-    ['num_mesh_x','num_mesh_y','num_dim','deltaX']));
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-
-  mu,Y_I,rho = tuple(map(params.get,
-    ['mu','Y_I','rho']));
-
-  fluid_phi = get_comp(Y,'I1_fluid_phi','I2_fluid_phi',Y_I);
-  fluid_p = get_comp(Y,'I1_fluid_p','I2_fluid_p',Y_I);
-  fluid_theta = get_comp(Y,'I1_fluid_theta','I2_fluid_theta',Y_I);
-  num_fluid_theta = fluid_theta.shape[0];
-
-  dot_F = np.matmul(G,fluid_p/rho);
-
-  return dot_F;
-
-
-def compute_K_heat(Y,params,extras=None):
-  """ We assume $\tilde{\kappa} = \tilde{\kappa}_0 \theta^2$
-    then the K_{heat} block is $\tilde{\kappa} I = \tilde{\kappa}_0 \theta^2$.
-    This yields  
-    $\bar{K}_{\theta,\theta} = -\mbox{\small div}(\tilde{\kappa}\nabla} 
-    = -\mbox{\small div}(\tilde{\kappa}_0 \theta^2\nabla$.
-  """
-    
-  if extras is not None:
-    G,D = tuple(map(extras.get,['G','D']));
-  else:
-    G,D = (None,None);
-
-  if G is None:
-    G = compute_matrix_vec_grad(Y,params);
-
-  if D is None:
-    D = compute_matrix_vec_div(Y,params);
-
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX = tuple(map(params.get,
-    ['num_mesh_x','num_mesh_y','num_dim','deltaX']));
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-  num_mesh_pts = num_mesh_x*num_mesh_y;
-
-  m,rho,gamma,mu,Y_I,c_v,c_v_I,kappa_0 = tuple(map(params.get,
-    ['m','rho','gamma','mu','Y_I','c_v','c_v_I','kappa_0']));
-
-  fluid_theta = get_comp(Y,'I1_fluid_theta','I2_fluid_theta',Y_I);
-  num_fluid_theta = fluid_theta.shape[0];
-
-  # if creating new array each time, then faster to use
-  theta = np.expand_dims(fluid_theta,(1,2)); # for broadcasting
-  GG = G.reshape(num_mesh_pts,num_dim,num_mesh_pts);
-  A1 = kappa_0*np.power(theta,2)*GG;
-  A2 = A1.reshape(num_mesh_pts*num_dim,num_mesh_pts);
-  K_heat = np.matmul(-D,A2);  
-
-  # if array is pre-created and re-used then this is probably faster 
-  #ii1 = range(0,num_fluid_theta);
-  #K_heat[ii1,ii1] = kappa_0*np.power(fluid_theta,2);
-  
-  return K_heat; 
-
-def compute_K_heat2(Y,params,extras=None):
-  """ K_heat based on a finite-volume-like model using 
-  local transfers similar to Fourier's Law formulated in
-  terms of 1/theta.  Gives final action similar to 
-  central difference Laplacian in terms of temperature.
-  Operator itself operates on 1/theta and is positive 
-  semi-definite.  """
-    
-  # get params data
-  kappa_0,num_mesh_x,num_mesh_y,num_dim,c_v,c_v_I,deltaX,mu,Y_I = tuple(map(params.get,
-    ['kappa_0','num_mesh_x','num_mesh_y','num_dim','c_v','c_v_I','deltaX','mu','Y_I']));
-  num_mesh_pts = num_mesh_x*num_mesh_y;
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-  deltaV = deltaX_sq = deltaX*deltaX;
-
-  ii = c_v_I; 
-  c_F = c_v[ii['fluid']];
-
-  fluid_theta = get_comp(Y,'I1_fluid_theta','I2_fluid_theta',Y_I);
-  num_fluid_theta = fluid_theta.shape[0];
-
-  K_heat = np.zeros((num_fluid_theta,num_fluid_theta));
-  x1 = np.linspace(0,num_mesh_x-1,num_mesh_x); 
-  x2 = np.linspace(0,num_mesh_y-1,num_mesh_y);
-  I = np.meshgrid(x1,x2); 
-  I1 = np.rint(I[0].flatten()).astype(dtype=int);  
-  I2 = np.rint(I[1].flatten()).astype(dtype=int);  
-  II = np.array([I1,I2]).T; 
-
-  Iip1 = np.zeros(II.shape,dtype=int); Iip1[:,:] = II; Iip1[:,0] = II[:,0] + 1; # periodic boundaries 
-  Iim1 = np.zeros(II.shape,dtype=int); Iim1[:,:] = II; Iim1[:,0] = II[:,0] - 1;
-  kk = np.nonzero(Iim1[:,0] < 0); Iim1[kk,0] = num_mesh_x + Iim1[kk,0];
-  kk = np.nonzero(Iip1[:,0] >= num_mesh_x); Iip1[kk,0] = Iip1[kk,0] - num_mesh_x;
-   
-  Ijp1 = np.zeros(II.shape,dtype=int); Ijp1[:,:] = II; Ijp1[:,1] = II[:,1] + 1; 
-  Ijm1 = np.zeros(II.shape,dtype=int); Ijm1[:,:] = II; Ijm1[:,1] = II[:,1] - 1;
-  kk = np.nonzero(Ijm1[:,1] < 0); Ijm1[kk,1] = num_mesh_y + Ijm1[kk,1];
-  kk = np.nonzero(Ijp1[:,1] >= num_mesh_y); Ijp1[kk,1] = Ijp1[kk,1] - num_mesh_y;
- 
-  II0 = II[:,1]*num_mesh_x + II[:,0];
-  IIip1 = Iip1[:,1]*num_mesh_x + Iip1[:,0];
-  IIim1 = Iim1[:,1]*num_mesh_x + Iim1[:,0];
-  IIjp1 = Ijp1[:,1]*num_mesh_y + Ijp1[:,0];
-  IIjm1 = Ijm1[:,1]*num_mesh_y + Ijm1[:,0];
-  
-  theta_I0 = fluid_theta[II0];
-  theta_Iip1 = fluid_theta[IIip1];
-  theta_Iim1 = fluid_theta[IIim1];
-  theta_Ijp1 = fluid_theta[IIjp1];
-  theta_Ijm1 = fluid_theta[IIjm1];
-
-  c = kappa_0/(c_F*c_F*deltaV);
-  K_heat[II0,II0] = c*theta_I0*(theta_Iip1 + theta_Iim1 + theta_Ijp1 + theta_Ijm1);
-  K_heat[II0,IIip1] = -c*theta_I0*theta_Iip1;
-  K_heat[II0,IIim1] = -c*theta_I0*theta_Iim1;
-  K_heat[II0,IIjp1] = -c*theta_I0*theta_Ijp1;
-  K_heat[II0,IIjm1] = -c*theta_I0*theta_Ijm1;
-
-  #K_heat = K_heat/deltaV; # scaling 1/deltaV for density 
- 
-  return K_heat; 
-
-
-def compute_R_heat(Y,params,extras):
-  m,rho,gamma,mu,kappa_0,Y_I = tuple(map(params.get,['m','rho','gamma','mu','kappa_0','Y_I']));
-  num_mesh_x,num_mesh_y,num_dim,deltaX = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));
-  num_dim_sq = num_dim*num_dim;
-  deltaV = deltaX_sq = deltaX*deltaX;
-   
-  fluid_theta = get_comp(Y,'I1_fluid_theta','I2_fluid_theta',Y_I);
-
-  # note, may need matrix_tensor_div to be for vectors and not tensors
-  # requiring some down-selection of entries  
-
-  if extras is not None:
-    flag_save,matrix_vec_div,matrix_tensor_div = tuple(map(extras.get,['flag_save','matrix_vec_div','matrix_tensor_div']));
-  else:
-    flag_save,matrix_vec_div,matrix_tensor_div = (None,None,None);
- 
-  if flag_save is None:
-    flag_save = False;
-
-  if matrix_vec_div is None: 
-    if matrix_tensor_div is None:
-      matrix_tensor_div = compute_matrix_tensor_div(Y,params,extras_matrix_tensor_div);
-    matrix_vec_div = extract_matrix_vec_div(matrix_tensor_div,params);
-
-  sqrt_tilde_kappa = np.sqrt(kappa_0*fluid_theta*fluid_theta/deltaV); # kappa_0*theta^2/dV 
-  n1 = num_mesh_x*num_mesh_y*num_dim; n2 = num_mesh_x*num_mesh_y*num_dim;
-  sqrt_tilde_kappa_I = np.zeros((n1,n2));
-  k1 = range(0,n1,num_dim); k2 = range(0,n1,num_dim);
-  sqrt_tilde_kappa_I[k1,k2] = sqrt_tilde_kappa;
-  k1 = range(1,n1,num_dim); k2 = range(1,n1,num_dim);
-  sqrt_tilde_kappa_I[k1,k2] = sqrt_tilde_kappa;
-  R_heat = -np.dot(matrix_vec_div,sqrt_tilde_kappa_I);
-
-  #R_heat = R_heat/np.sqrt(deltaV);
-
-  if flag_save:
-    extras.update({'matrix_vec_div':matrix_vec_div});
- 
-  return R_heat; 
-
-
-def compute_R_heat2(Y,params,extras):
-
-  """ 
-    Compute the factor $K_heat = RR^T$.
-
-    This uses the discrete operator based on finite-volume-like method
-    and boxes.   This yields the factorization of the form 
-  
-    R = -D, where 
-    $[G (1/\theta)]_{(I_1 + I_2)/2} = s_{I_1,I_2}\sqrt{\theta_{I_1}\theta_{I_2}}\left(1/\theta_{I_2} - 1/\theta_{I_1}
-    \right)$, where $s_{I_1,I_2} = -1$ is $I_1 < I_2$ and $+1$ otherwise.  We claim
-     that in fact we have $K_{heat} = -D\cdot G$ gives the operator. 
-
-  """
-  # get params data
-  kappa_0,num_mesh_x,num_mesh_y,num_dim,c_v,c_v_I,deltaX,mu,Y_I = tuple(map(params.get,
-    ['kappa_0','num_mesh_x','num_mesh_y','num_dim','c_v','c_v_I','deltaX','mu','Y_I']));
-  num_mesh_pts = num_mesh_x*num_mesh_y;
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-  deltaV = deltaX_sq = deltaX*deltaX;
-
-  ii = c_v_I; 
-  c_F = c_v[ii['fluid']];
-
-  fluid_theta = get_comp(Y,'I1_fluid_theta','I2_fluid_theta',Y_I);
-  num_fluid_theta = fluid_theta.shape[0];
-
-  wG = np.zeros((num_fluid_theta,num_dim,num_fluid_theta)); # weighted gradient
-  x1 = np.linspace(0,num_mesh_x-1,num_mesh_x); 
-  x2 = np.linspace(0,num_mesh_y-1,num_mesh_y);
-  I = np.meshgrid(x1,x2); 
-  I1 = np.rint(I[0].flatten()).astype(dtype=int);  
-  I2 = np.rint(I[1].flatten()).astype(dtype=int);  
-  II = np.array([I1,I2]).T; 
-
-  Iip1 = np.zeros(II.shape,dtype=int); Iip1[:,:] = II; Iip1[:,0] = II[:,0] + 1;  # periodic boundaries
-  Iim1 = np.zeros(II.shape,dtype=int); Iim1[:,:] = II; Iim1[:,0] = II[:,0] - 1;
-  kk = np.nonzero(Iim1[:,0] < 0); Iim1[kk,0] = num_mesh_x + Iim1[kk,0];
-  kk = np.nonzero(Iip1[:,0] >= num_mesh_x); Iip1[kk,0] = Iip1[kk,0] - num_mesh_x;
-   
-  Ijp1 = np.zeros(II.shape,dtype=int); Ijp1[:,:] = II; Ijp1[:,1] = II[:,1] + 1; 
-  Ijm1 = np.zeros(II.shape,dtype=int); Ijm1[:,:] = II; Ijm1[:,1] = II[:,1] - 1;
-  kk = np.nonzero(Ijm1[:,1] < 0); Ijm1[kk,1] = num_mesh_y + Ijm1[kk,1];
-  kk = np.nonzero(Ijp1[:,1] >= num_mesh_y); Ijp1[kk,1] = Ijp1[kk,1] - num_mesh_y;
- 
-  II0 = II[:,1]*num_mesh_x + II[:,0];
-  IIip1 = Iip1[:,1]*num_mesh_x + Iip1[:,0];
-  IIim1 = Iim1[:,1]*num_mesh_x + Iim1[:,0];
-  IIjp1 = Ijp1[:,1]*num_mesh_y + Ijp1[:,0];
-  IIjm1 = Ijm1[:,1]*num_mesh_y + Ijm1[:,0];
-  
-  theta_I0 = fluid_theta[II0];
-  theta_Iip1 = fluid_theta[IIip1];
-  theta_Iim1 = fluid_theta[IIim1];
-  theta_Ijp1 = fluid_theta[IIjp1];
-  theta_Ijm1 = fluid_theta[IIjm1];
-
-  # we use staggered convention that I0^(d) is always 
-  # to the left or below the cell-center I0^{d).
-  # we construct the weighted gradient operator (wG) 
-  c = np.sqrt(kappa_0/(c_F*c_F*deltaV));
-  wG[II0,0,II0] = c*np.sqrt(theta_I0*theta_Iim1);
-  wG[II0,0,IIim1] = -c*np.sqrt(theta_I0*theta_Iim1);
-  wG[II0,1,II0] = c*np.sqrt(theta_I0*theta_Ijm1);
-  wG[II0,1,IIjm1] = -c*np.sqrt(theta_I0*theta_Ijm1);
-
-  wwG = wG.reshape(II0.shape[0]*num_dim,II0.shape[0]);
-
-  R_heat = wwG.T;  
-  
-  return R_heat; 
-
-
 def extract_matrix_vec_div(matrix_tensor_div,params):
     num_mesh_x,num_mesh_y,num_dim = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim']));
     num_dim_sq = num_dim*num_dim;
@@ -1347,138 +1020,6 @@ def extract_matrix_vec_div(matrix_tensor_div,params):
 
     return matrix_vec_div; 
 
-def compute_partial_theta_K_heat(Y,params,extras=None):
-  """ We assume $\tilde{\kappa} = \tilde{\kappa}_0 \theta^2$
-    then the K_{heat} block is $\tilde{\kappa} I = \tilde{\kappa}_0 \theta^2$.
-    This yields  
-    $\bar{K}_{\theta,\theta} = -\mbox{\small div}(\tilde{\kappa}\nabla} 
-    = -\mbox{\small div}(\tilde{\kappa}_0 \theta^2\nabla$ and 
-    $\frac{\partial \bar{K}_{\theta,\theta}}{\partial \theta}
-    = -\mbox{\small div}(2\tilde{\kappa}_0 \theta \nabla
-    $ 
-  """ 
-  # get params data
-  kappa_0 = params['kappa_0']; 
-  num_mesh_x = params['num_mesh_x']; num_mesh_y = params['num_mesh_y'];
-  num_dim = params['num_dim'];
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-  deltaX = params['deltaX']; mu = params['mu']; Y_I = params['Y_I'];
-
-  fluid_theta = get_comp(Y,'I1_fluid_theta','I2_fluid_theta',Y_I);
-  num_fluid_theta = fluid_theta.shape[0];
-
-  if extras is not None:
-    flag_save,matrix_vec_div,matrix_tensor_div,matrix_scalar_grad = tuple(map(
-      extras.get,['flag_save','matrix_vec_div','matrix_tensor_div','matrix_scalar_grad']));
-  else:
-    flag_save,matrix_vec_div,matrix_tensor_div,matrix_scalar_grad = (None,None,None,None);
-
-  if matrix_vec_div is None: 
-    matrix_vec_div = extract_matrix_vec_div(matrix_tensor_div,params);
-
-  if matrix_scalar_grad is None:
-    matrix_scalar_grad = np.transpose(matrix_vec_div);
-
-  partial_tilde_kappa = 2.0*kappa_0*fluid_theta;
-  partial_theta_tilde_kappa_grad = np.zeros(matrix_scalar_grad.shape);
-  for d in range(0,num_dim):
-    i1 = d; i2 = i1 + num_fluid_theta*num_dim;
-    j1 = 0; j2 = j1 + num_fluid_theta;
-    ii1 = d; ii2 = ii1 + num_fluid_theta*num_dim;
-    jj1 = 0; jj2 = jj1 + num_fluid_theta;
-    partial_theta_tilde_kappa_grad[i1:i2:num_dim,j1:j2] = partial_tilde_kappa*matrix_scalar_grad[ii1:ii2:num_dim,jj1:jj2];
-
-  partial_theta_K_heat = np.sum(np.dot(matrix_vec_div,partial_theta_tilde_kappa_grad),1)/deltaV; # scaling to match K_heat above (double-check)
-  
-  return partial_theta_K_heat; 
-
-def compute_partial_theta_K_heat2(Y,params,extras=None):
-  """   
-    We use that this can be computed for K_heat2 the same 
-    as multiplying by 1/\theta, since it removes a factor
-    from the product in each line.  We could optimize by constructing
-    just this special form and sum. 
-
-
-  """ 
-  
-  # get params data
-  kappa_0,num_mesh_x,num_mesh_y,num_dim,c_v,c_v_I,deltaX,mu,Y_I = tuple(map(params.get,
-    ['kappa_0','num_mesh_x','num_mesh_y','num_dim','c_v','c_v_I','deltaX','mu','Y_I']));
-  num_mesh_pts = num_mesh_x*num_mesh_y;
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-  deltaV = deltaX_sq = deltaX*deltaX;
-
-  ii = c_v_I; 
-  c_F = c_v[ii['fluid']];
-
-  fluid_theta = get_comp(Y,'I1_fluid_theta','I2_fluid_theta',Y_I);
-  num_fluid_theta = fluid_theta.shape[0];
-
-  partial_theta_K_heat = np.zeros(num_fluid_theta);
-  x1 = np.linspace(0,num_mesh_x-1,num_mesh_x); 
-  x2 = np.linspace(0,num_mesh_y-1,num_mesh_y);
-  I = np.meshgrid(x1,x2); 
-  I1 = np.rint(I[0].flatten()).astype(dtype=int);  
-  I2 = np.rint(I[1].flatten()).astype(dtype=int);  
-  II = np.array([I1,I2]).T; 
-
-  Iip1 = np.zeros(II.shape,dtype=int); Iip1[:,:] = II; Iip1[:,0] = II[:,0] + 1; 
-  Iim1 = np.zeros(II.shape,dtype=int); Iim1[:,:] = II; Iim1[:,0] = II[:,0] - 1;
-  kk = np.nonzero(Iim1[:,0] < 0); Iim1[kk,0] = num_mesh_x + Iim1[kk,0];
-  kk = np.nonzero(Iip1[:,0] >= num_mesh_x); Iip1[kk,0] = Iip1[kk,0] - num_mesh_x;
-   
-  Ijp1 = np.zeros(II.shape,dtype=int); Ijp1[:,:] = II; Ijp1[:,1] = II[:,1] + 1; 
-  Ijm1 = np.zeros(II.shape,dtype=int); Ijm1[:,:] = II; Ijm1[:,1] = II[:,1] - 1;
-  kk = np.nonzero(Ijm1[:,1] < 0); Ijm1[kk,1] = num_mesh_y + Ijm1[kk,1];
-  kk = np.nonzero(Ijp1[:,1] >= num_mesh_y); Ijp1[kk,1] = Ijp1[kk,1] - num_mesh_y;
- 
-  II0 = II[:,1]*num_mesh_x + II[:,0];
-  IIip1 = Iip1[:,1]*num_mesh_x + Iip1[:,0];
-  IIim1 = Iim1[:,1]*num_mesh_x + Iim1[:,0];
-  IIjp1 = Ijp1[:,1]*num_mesh_y + Ijp1[:,0];
-  IIjm1 = Ijm1[:,1]*num_mesh_y + Ijm1[:,0];
-  
-  theta_I0 = fluid_theta[II0];
-  theta_Iip1 = fluid_theta[IIip1];
-  theta_Iim1 = fluid_theta[IIim1];
-  theta_Ijp1 = fluid_theta[IIjp1];
-  theta_Ijm1 = fluid_theta[IIjm1];
-
-  c = kappa_0/(c_F*c_F*deltaX_sq); 
-  partial_theta_K_heat[II0] = c*(theta_Iip1 + theta_Iim1 + theta_Ijp1 + theta_Ijm1);
-  partial_theta_K_heat[II0] += -c*theta_I0;
-  partial_theta_K_heat[II0] += -c*theta_I0;
-  partial_theta_K_heat[II0] += -c*theta_I0;
-  partial_theta_K_heat[II0] += -c*theta_I0;
-
-  return partial_theta_K_heat; 
-
-def compute_partial_p_dot_F(Y,params,extras=None):
-
-  rho = params['rho'];
-
-  Y_parts = dd = get_parts(Y,params);
-  fluid_phi,fluid_p,fluid_theta = tuple(map(dd.get,['fluid_phi','fluid_p','fluid_theta']));
-
-  num_fluid_phi = fluid_phi.shape[0]; num_fluid_p = fluid_p.shape[0]; num_fluid_theta = fluid_theta.shape[0];
-
-  partial_p_dot_F = np.zeros(num_fluid_p)
-
-  if extras is not None:
-    matrix_tensor_div, = tuple(map(params.get,['compute_matrix_tensor_div']));
-  else:
-    matrix_tensor_div = None; 
-
-  if matrix_tensor_div is None:
-    matrix_tensor_div = compute_matrix_tensor_div(Y,params);
-
-  # WARNING: Need to get correct matrix_tensor_div (vector version I think)
-  matrix_tensor_grad = np.transpose(matrix_tensor_div); 
-
-  partial_p_dot_F = matrix_tensor_grad/rho;
-  
-  return partial_p_dot_F;
 
 def compute_M_S_j(Y,params):
   pass;
@@ -1488,135 +1029,6 @@ def compute_K0_j(Y,params):
 
 def compute_L0(Y,params):
   pass; 
-
-def compute_bar_L(Y,params,extras=None):
-  m,rho,gamma,mu,Y_I,c_v,c_v_I,deltaX = tuple(map(
-    params.get,['m','rho','gamma','mu','Y_I','c_v','c_v_I','deltaX']));
-  num_dim = params['num_dim'];
-  num_dim_sq = num_dim*num_dim;
-  deltaV = deltaX_sq = deltaX*deltaX;
-
-  get_parts = params['get_parts'];
-
-  Y_parts = dd = get_parts(Y,params);
-  particle_q,particle_p,particle_theta = tuple(map(
-    dd.get,['particle_q','particle_p','particle_theta']));
-  fluid_phi,fluid_p,fluid_theta = tuple(map(
-    dd.get,['fluid_phi','fluid_p','fluid_theta']));
-  interface_q,interface_p,interface_theta = tuple(map(
-    dd.get,['interface_q','interface_p','interface_theta']));
-
-  Y_I_parts = dd = get_parts_I(params);
-  I1_particle_q,I2_particle_q = tuple(map(
-    dd.get,['I1_particle_q','I2_particle_q']));
-  I1_particle_p,I2_particle_p = tuple(map(
-    dd.get,['I1_particle_p','I2_particle_p']));
-  I1_particle_theta,I2_particle_theta = tuple(map(
-    dd.get,['I1_particle_theta','I2_particle_theta']));
-
-  I1_fluid_phi,I2_fluid_phi = tuple(map(
-    dd.get,['I1_fluid_phi','I2_fluid_phi']));
-  I1_fluid_p,I2_fluid_p = tuple(map(
-    dd.get,['I1_fluid_p','I2_fluid_p']));
-  I1_fluid_theta,I2_fluid_theta = tuple(map(
-    dd.get,['I1_fluid_theta','I2_fluid_theta']));
-
-  I1_interface_q,I2_interface_q = tuple(map(    
-    dd.get,['I1_interface_q','I2_interface_q']));
-  I1_interface_p,I2_interface_p = tuple(map(
-    dd.get,['I1_interface_p','I2_interface_p']));
-  I1_interface_theta,I2_interface_theta = tuple(map(
-    dd.get,['I1_interface_theta','I2_interface_theta']));
-
-  num_particle_q = particle_q.shape[0]; num_particle_p = particle_p.shape[0];
-  num_particle_theta = particle_theta.shape[0]; 
-  num_fluid_phi = fluid_phi.shape[0]; num_fluid_p = fluid_p.shape[0]; 
-  num_fluid_theta = fluid_theta.shape[0]; 
-  num_interface_q = interface_q.shape[0]; 
-  num_interface_p = interface_p.shape[0]; 
-  num_interface_theta = interface_theta.shape[0];
-
-  # extras handling   
-  if extras is not None:
-    D_S_j,flag_save = tuple(map(
-      extras.get,['D_S_j','flag_save'])); 
-  else:
-    D_S_j,flag_save = (None,None);
-
-  if flag_save is None:
-    flag_save = False; 
-
-  if D_S_j is None:
-    D_S_j = compute_D_S_j(Y_n,params);
-
-  # compute the bar_L operator 
-  num_Y = Y.shape[0];
-  bar_L = np.zeros((num_Y, num_Y)); 
-
-  num_q = num_particle_q;
-  i1 = I1_particle_q; i2 = I2_particle_q; ii = range(i1,i2);
-  j1 = I1_particle_p; j2 = I2_particle_p; jj = range(j1,j2);
-  bar_L[ii,jj] = 1.0;  # identity tensor 
-  bar_L[jj,ii] = -1.0; # negative identity tensor
-
-  num_q = num_fluid_phi;
-  i1 = I1_fluid_phi; i2 = I2_fluid_phi; ii = range(i1,i2);
-  j1 = I1_fluid_p; j2 = I2_fluid_p; jj = range(j1,j2);
-  bar_L[ii,jj] = 1.0/deltaV;  # identity tensor (energy density) 
-  bar_L[jj,ii] = -1.0/deltaV; # negative identity tensor (energy density)
-
-  num_q = num_interface_q;
-  i1 = I1_interface_q; i2 = I2_interface_q; ii = range(i1,i2);
-  j1 = I1_interface_p; j2 = I2_interface_p; jj = range(j1,j2);
-  bar_L[ii,jj] = 1.0;  # identity tensor 
-  bar_L[jj,ii] = -1.0; # negative identity tensor
-
-  ll = c_v_I; 
-
-  # particle entropy contributions partial_q S
-  i1 = I1_particle_p; i2 = I2_particle_p;
-  j1 = I1_particle_theta; j2 = I2_particle_theta;
-  k1 = 0; k2 = k1 + num_particle_q;
-  partial_theta_S_j = particle_theta*c_v[ll['particle']];
-  bar_L[i1:i2,j1:j2] = np.expand_dims(D_S_j[ll['particle']][k1:k2]/partial_theta_S_j,1);
-  bar_L[j1:j2,i1:i2] = -np.transpose(bar_L[i1:i2,j1:j2]);
-
-  # fluid entropy contributions partial_q S
-  i1 = I1_fluid_p; i2 = I2_fluid_p;
-  j1 = I1_fluid_theta; j2 = I2_fluid_theta;
-  k1 = 0; k2 = k1 + num_fluid_phi;
-  partial_theta_S_j = fluid_theta*c_v[ll['fluid']];
-  for d in range(0,num_dim):
-    ii = range(i1 + d,i2,num_dim); jj = range(j1,j2);
-    bar_L[ii,jj] = D_S_j[ll['fluid']][k1 + d:k2:num_dim]/(partial_theta_S_j*deltaV); # deltaV for entropy density
-    bar_L[jj,ii] = -np.transpose(bar_L[ii,jj]);
-
-  # interface entropy contributions partial_q S
-  i1 = I1_interface_p; i2 = I2_interface_p;
-  j1 = I1_interface_theta; j2 = I2_interface_theta;
-  k1 = 0; k2 = k1 + num_interface_q;
-  partial_theta_S_j = interface_theta*c_v[ll['interface']];
-  bar_L[i1:i2,j1:j2] = np.expand_dims(D_S_j[ll['interface']][k1:k2]/partial_theta_S_j,1);
-  bar_L[j1:j2,i1:i2] = -np.transpose(bar_L[i1:i2,j1:j2]);
-
-  # there is a separate entropy $S^{(j)}$ for each heat-body 
-  I_in = {'i1':[0],'i2':[Y.shape[0]]};
-  I_local_in = {'i1':[0],'i2':[Y.shape[0]]};
-  I_local_out = {'i1':[0],'i2':[Y.shape[0]]};
-  I_out = {'i1':[0],'i2':[Y.shape[0]]};
-
-  bar_L_indices = {'I_in':I_in,'I_out':I_out,
-                   'I_local_in':I_local_in,'I_local_out':I_local_out};
-
-  return bar_L,bar_L_indices;  
-
-def get_bar_K_j_I(params):
-  bar_K_j_I_list = {'particle':0,'fluid':1,'interface':2};
-  return bar_K_j_I_list;
-
-
-def conv_vec_K_indexed_to_B_indexed(vec_a,Y,K_j_indices,B_j_indices):
-  raise Exception("not implemented.");
 
 
 def compute_K_ovdc_grad(Y,params,extras=None):
