@@ -33,7 +33,6 @@ def get_mesh_yy(params):
   y1 = yyy[0].flatten();  y2 = yyy[1].flatten();
   return y1,y2; 
 
-
 def get_mesh_coord(params):
   xx = get_mesh_xx(params); 
   yy = np.meshgrid(xx[0],xx[1]);
@@ -42,9 +41,6 @@ def get_mesh_coord(params):
   Lx = params['num_mesh_x']*deltaX;
   Ly = params['num_mesh_y']*deltaX;
   return x1,x2,Lx,Ly;
-
-def sup_norm(a):
-  return np.max(np.abs(a.flatten()));
 
 def conv_2d_vec_3d(X,num_dim):
   num_points = X.shape[0]//num_dim;
@@ -173,7 +169,6 @@ def write_vtr_data(filename,xx,field_list,flag_verbose=1):
   vtr_writer.SetDataModeToAscii(); # help ensure ascii output (as opposed to binary)
   vtr_writer.Write();
 
-
 def write_vtp_data(vtp_filename,points,field_list,flag_verbose=1):
   # output a VTP file with the fields
 
@@ -233,8 +228,6 @@ def write_vtp_data(vtp_filename,points,field_list,flag_verbose=1):
   writer_vtp.SetDataModeToAscii(); # help ensure ascii output (as opposed to binary)
   writer_vtp.Write();   
 
-
-# =============================
 def write_array_vtr(a,params,name=None,filename=None):
   if name is None:
     name = 'a';
@@ -261,7 +254,6 @@ def get_comp(Y,i1_str,i2_str,Y_I):
 def set_comp(Y,i1_str,i2_str,Y_I,val):
   Y[Y_I[i1_str]:Y_I[i2_str]] = val;
 
-
 def add_in_components(Y_out,a_out,I_out,I_local_out): 
   ii1_list = I_out['i1']; ii2_list = I_out['i2']; 
   i1_list = I_local_out['i1']; i2_list = I_local_out['i2']; 
@@ -282,9 +274,6 @@ def add_in_matrix_entries(A,B,I_out,I_in,I_local_out,I_local_in):
     jj1 = jj1_list[k]; jj2 = jj2_list[k];
     A[ii1:ii2,jj1:jj2] += B[i1:i2,j1:j2];
 
-def apply_tensors(Y_out,A_list,I_out_list,I_local_out_list):
-  pass;
-
 def get_parts_I(params):
   return params['Y_I'];
 
@@ -302,7 +291,6 @@ def map_particle_periodic(Y,params):
  
   Y[I1_particle_q + 0] = np.mod(Y[I1_particle_q + 0],Lx);
   Y[I1_particle_q + 1] = np.mod(Y[I1_particle_q + 1],Ly);
-
 
 def compute_matrix_vec_div(Y,params,extras=None):
   """ Divergence acting on vectors $v$ to produce scalar $a$, 
@@ -359,7 +347,6 @@ def compute_matrix_vec_div(Y,params,extras=None):
 
   return D;
 
-
 def compute_matrix_vec_grad(Y,params,extras=None):
   """ Gradient acting on scalar fields, such as $\nabla f$. """
 
@@ -414,7 +401,6 @@ def compute_matrix_vec_grad(Y,params,extras=None):
     extras['G'] = G;
 
   return G;
-
 
 def peskin_delta(rr,extras=None):
  
@@ -537,7 +523,6 @@ def compute_matrix_Gamma_op(Y,params,extras=None):
 
   return matrix_Gamma_op;
 
-
 def compute_matrix_Lambda_op(Y,params,extras=None):
   """ Compute the force spreading operator 
       $\mb{f} = \Lambda[\mb{F}]$ to obtain 
@@ -564,7 +549,6 @@ def compute_K0_j(Y,params):
 
 def compute_L0(Y,params):
   pass; 
-
 
 def compute_K_ovdc_grad(Y,params,extras=None):
 
@@ -600,7 +584,6 @@ def compute_K_ovdc_grad(Y,params,extras=None):
 
   return K_ovdc_grad;
 
-
 def compute_dot_G(Y,params,extras=None):
  
   if extras is not None:
@@ -632,7 +615,6 @@ def compute_dot_G(Y,params,extras=None):
 
   return dot_G;
 
-
 def compute_K_ovdc_dot_G(Y,params,extras=None):
 
   if extras is not None:
@@ -663,8 +645,6 @@ def compute_K_ovdc_dot_G(Y,params,extras=None):
   K_ovdc_dot_G = K_dFFF;
 
   return K_ovdc_dot_G; 
-
-
 
 def compute_conc_K_heat2(Y,params,extras=None):
     
@@ -719,7 +699,6 @@ def compute_conc_K_heat2(Y,params,extras=None):
   K_heat[II0,IIjm1] = -c*theta_I0*theta_Ijm1;
 
   return K_heat; 
-
 
 def compute_bar_K__conc1(Y,params,extras):
 
@@ -879,9 +858,7 @@ def compute_bar_K__conc1(Y,params,extras):
 
   return bar_K_j_list, bar_K_j_indices; 
 
-# =================================
 # particle (overdamped case)
-# ---------------------------------
 def compute_D_j_inv_particle(Y,params,extras=None):
   gamma_particle,Y_I,c_v,c_v_I = tuple(map(params.get,['gamma_particle','Y_I','c_v','c_v_I']));
   num_particles,num_dim = tuple(map(params.get,['num_particles','num_dim']));
@@ -1085,8 +1062,6 @@ def compute_bar_K__overdamped_particle(Y,params,extras):
 
   return bar_K_j_list, bar_K_j_indices; 
 
-
-
 def compute_D_j_interface_conc(Y,params,extras=None):
   Y_I,c_v,c_v_I,deltaX,gamma = tuple(map(
     params.get,['Y_I','c_v','c_v_I','deltaX','gamma']));
@@ -1284,7 +1259,6 @@ def compute_conc_particle_interface(Y,params,extras):
 
   return bar_K_j_list, bar_K_j_indices; 
 
-
 def compute_bar_L_conc(Y,params,extras=None):
   Y_I,c_v,c_v_I,deltaX = tuple(map(
     params.get,['Y_I','c_v','c_v_I','deltaX']));
@@ -1353,7 +1327,6 @@ def compute_bar_L_conc(Y,params,extras=None):
 
   return bar_L,bar_L_indices;  
 
-
 def compute_bar_K_j_conc(Y,params,extras): 
 
   flag_save_energy_flux,energy_flux_list = \
@@ -1413,7 +1386,6 @@ def compute_bar_K_j_conc(Y,params,extras):
     extras.update({'energy_flux_list':energy_flux_list}); 
 
   return bar_K_j_list,bar_K_j_indices; 
-
 
 def compute_R_ovd_particle(Y,params,extras=None):
   """ R_ovd factor so that R_ovd*R_ovd^T = K_ovdc
@@ -1505,7 +1477,6 @@ def compute_R_ovdc(Y,params,extras=None):
     extras.update({'matrix_vec_div':matrix_vec_div}); 
     
   return R_ovdc; 
-
 
 def compute_R_heat2__conc(Y,params,extras):
   """ Compute the factor $K_heat = RR^T$. """
