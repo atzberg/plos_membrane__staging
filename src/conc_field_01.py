@@ -1,14 +1,4 @@
-#!/usr/bin/env python
-#
-# coding: utf-8
-#
-#
 # Concentration fields with continuous temperature fields 
-# 
-# We build on Mielke 2011 paper, and GENERIC framework with 
-# $\bar{K} = N_\mathcal{E} K_0 N_\mathcal{E} since this gives us a natural
-# way to handle the continuous fields and heat fluxes. 
-#
 
 print("="*80);
 
