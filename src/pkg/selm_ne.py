@@ -1,9 +1,6 @@
-# SELM Non-equilibrium.
-#
+# SELM Non-equilibrium Package 
 
-print("="*80);
-
-# -- Imports
+# -- imports
 import numpy as np
 import pickle;
 import time; 
@@ -17,7 +14,7 @@ import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 from vtk.util.numpy_support import numpy_to_vtk
 
-
+# -- functions
 def create_dir(dir_name):
   if not os.path.exists(dir_name):
     os.makedirs(dir_name);   
@@ -80,14 +77,10 @@ def add_fdata(flist,aa,name='a'):
   flist.append(fdata);
   return flist;
 
-
-# =============================
 def write_vtr_data(filename,xx,field_list,flag_verbose=1):
 
-  # create the unstructured grid
   vtr_grid = vtk.vtkRectilinearGrid();
 
-  # num per direction
   vtr_grid.SetDimensions(xx[0].shape[0],
                          xx[1].shape[0],
                          xx[2].shape[0]);
@@ -96,7 +89,6 @@ def write_vtr_data(filename,xx,field_list,flag_verbose=1):
   for d in range(0,3):
     num_points *= xx[d].shape[0];
      
-  # setup the general grid
   x1Array = vtk.vtkDoubleArray();
   x1Array.SetName('x1');
   for x1 in xx[0]: x1Array.InsertNextValue(x1);
@@ -124,7 +116,6 @@ def write_vtr_data(filename,xx,field_list,flag_verbose=1):
 
     # special case of 2 components we convert to 3
     # assuming the z-direction is zero.
-    # WARNING: converting values to process in vtr.
     if (NumberOfComponents == 2):
       ambient_num_dim = 3; ss = field_values.shape; 
       field_values = \
@@ -174,7 +165,7 @@ def write_vtr_data(filename,xx,field_list,flag_verbose=1):
       ss += "NumberOfComponents = " + str(NumberOfComponents);
       raise Exception(ss);
 
-  # write the unstructured grid to XML file
+  # write the structured grid to XML file
   vtr_writer = vtk.vtkXMLRectilinearGridWriter();
   vtr_writer.SetFileName(filename);
   vtr_writer.SetInputData(vtr_grid);
@@ -186,7 +177,6 @@ def write_vtr_data(filename,xx,field_list,flag_verbose=1):
 def write_vtp_data(vtp_filename,points,field_list,flag_verbose=1):
   # output a VTP file with the fields
 
-  # record the data for output
   vtp_data = vtk.vtkPolyData();
 
   # setup the points data
@@ -197,8 +187,6 @@ def write_vtp_data(vtp_filename,points,field_list,flag_verbose=1):
     vtp_points.InsertNextPoint(points[I,0],points[I,1],points[I,2]);
   
   vtp_data.SetPoints(vtp_points);
- 
-  # Get data from the vtu object
 
   # -- setup data arrays
   num_fields = len(field_list);
@@ -315,62 +303,6 @@ def map_particle_periodic(Y,params):
   Y[I1_particle_q + 0] = np.mod(Y[I1_particle_q + 0],Lx);
   Y[I1_particle_q + 1] = np.mod(Y[I1_particle_q + 1],Ly);
 
-def compute_matrix_tensor_div(Y,params,extras=None):
-  """ Divergence acting on tensor $\sigma$ to produce vector $b$, 
-      $b = div(\sigma),\; b_i = \partial_{j} \sigma_{ij}$.
-  """
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX \
-    = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-
-  if num_dim != 2:
-    raise Exception("assumes num_dim = 2, input gave num_dim = " + str(num_dim));
-
-  if extras is not None:
-    D,flag_save = tuple(map(extras.get,['D','flag_save']));
-    if flag_save is None:
-      flag_save = False; 
-  else:
-    D = None;
-    flag_save = False; 
-
-  if D is not None: # no need to re-compute, just return it
-    return D;
-
-  # div: maps R^{dxd} -> R^d, (maps tensor to vector)
-  D = np.zeros((num_mesh_x*num_mesh_y*num_dim,num_mesh_x*num_mesh_y*num_dim_sq));
-  
-  # @ optimize 
-  vec_I = np.zeros(num_dim,dtype=int); vec_num_mesh = np.zeros(num_dim,dtype=int);
-  vec_num_mesh[0] = num_mesh_x; vec_num_mesh[1] = num_mesh_y;
-  J0_mesh_iim1 = np.zeros(num_dim,dtype=int); J0_mesh_iip1 = np.zeros(num_dim,dtype=int); 
-  for j in range(0,num_mesh_y): 
-    for i in range(0,num_mesh_x):
-      vec_I[0] = i; vec_I[1] = j; 
-      vec_Im1 = np.zeros(vec_I.shape,dtype=int); vec_Ip1 = np.zeros(vec_I.shape,dtype=int); # same shape arrays
-      I0_mesh = vec_I[1]*num_mesh_x*num_dim + vec_I[0]*num_dim + 0;
-      for d in range(0,num_dim):
-        vec_Im1[:] = vec_I[:]; vec_Ip1[:] = vec_I[:]; # copy index then perturb it only in index d 
-        iim1 = vec_I[d] - 1; iip1 = vec_I[d] + 1;
-        if iim1 < 0: 
-          iim1 = vec_num_mesh[d] + iim1; # periodic
-        if iip1 >= vec_num_mesh[d]: 
-          iip1 = iip1 - vec_num_mesh[d]; # periodic
-        vec_Im1[d] = iim1; vec_Ip1[d] = iip1; 
-        
-        J0_mesh_iim1[d] = vec_Im1[1]*num_mesh_x*num_dim_sq + vec_Im1[0]*num_dim_sq + 0;
-        J0_mesh_iip1[d] = vec_Ip1[1]*num_mesh_x*num_dim_sq + vec_Ip1[0]*num_dim_sq + 0;
-
-      for a in range(0,num_dim):
-        for b in range(0,num_dim):
-          D[I0_mesh + a,J0_mesh_iip1[b] + a*num_dim + b] += 1.0/(2.0*deltaX);
-          D[I0_mesh + a,J0_mesh_iim1[b] + a*num_dim + b] += -1.0/(2.0*deltaX); 
-
-  if flag_save: 
-    extras['D'] = D;
-
-  return D;
 
 def compute_matrix_vec_div(Y,params,extras=None):
   """ Divergence acting on vectors $v$ to produce scalar $a$, 
@@ -427,173 +359,10 @@ def compute_matrix_vec_div(Y,params,extras=None):
 
   return D;
 
-def compute_matrix_tensor_grad(Y,params,extras=None):
-  """ Gradient acting on tensor fields, such as $\nabla u$.  """
-
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX \
-    = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-
-  if num_dim != 2:
-    raise Exception("assumes num_dim = 2, input gave num_dim = " + str(num_dim));
-
-  if extras is not None:
-    G,flag_save = tuple(map(extras.get,['G','flag_save']));
-    if flag_save is None:
-      flag_save = False; 
-  else:
-    G = None;
-    flag_save = False; 
-
-  if G is not None: # no need to re-compute, just return it
-    return G;
-
-  # grad: maps R^{d} -> R^{dxd}, (maps vector to tensor)
-  G = np.zeros((num_mesh_x*num_mesh_y*num_dim_sq,num_mesh_x*num_mesh_y*num_dim));
-  
-  # @ optimize 
-  vec_I = np.zeros(num_dim,dtype=int); vec_num_mesh = np.zeros(num_dim,dtype=int);
-  vec_num_mesh[0] = num_mesh_x; vec_num_mesh[1] = num_mesh_y;
-  J0_mesh_iim1 = np.zeros(num_dim,dtype=int); J0_mesh_iip1 = np.zeros(num_dim,dtype=int); 
-  for j in range(0,num_mesh_y): 
-    for i in range(0,num_mesh_x):
-      vec_I[0] = i; vec_I[1] = j; 
-      vec_Im1 = vec_I + 0; vec_Ip1 = vec_I + 0; # make copies
-      I0_mesh = vec_I[1]*num_mesh_x*num_dim_sq + vec_I[0]*num_dim_sq + 0;
-      for d in range(0,num_dim):
-        vec_Im1[:] = vec_I[:]; vec_Ip1[:] = vec_I[:]; # copy index then perturb it only in index d 
-        iim1 = vec_I[d] - 1; iip1 = vec_I[d] + 1;
-        if iim1 < 0: 
-          iim1 = vec_num_mesh[d] + iim1; # periodic
-        if iip1 >= vec_num_mesh[d]: 
-          iip1 = iip1 - vec_num_mesh[d]; # periodic
-        vec_Im1[d] = iim1; vec_Ip1[d] = iip1; 
-        
-        J0_mesh_iim1[d] = vec_Im1[1]*num_mesh_x*num_dim + vec_Im1[0]*num_dim + 0;
-        J0_mesh_iip1[d] = vec_Ip1[1]*num_mesh_x*num_dim + vec_Ip1[0]*num_dim + 0;
-
-      for a in range(0,num_dim):
-        for b in range(0,num_dim):
-          G[I0_mesh + a*num_dim + b,J0_mesh_iip1[b] + a] += 1.0/(2.0*deltaX);
-          G[I0_mesh + a*num_dim + b,J0_mesh_iim1[b] + a] += -1.0/(2.0*deltaX); 
-
-  if flag_save:
-    extras['G'] = G;
-
-  return G;
-
-
-def compute_matrix_tensor_grad2(Y,params,extras=None):
-  """ Gradient acting on tensor fields with extra averaging to help avoid the
-      checkerboard instability.  Computes consistently $\nabla u$. """
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX \
-    = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-
-  if num_dim != 2:
-    raise Exception("assumes num_dim = 2, input gave num_dim = " + str(num_dim));
-
-  if extras is not None:
-    G,flag_save = tuple(map(extras.get,['G','flag_save']));
-    if flag_save is None:
-      flag_save = False; 
-  else:
-    G = None;
-    flag_save = False; 
-
-  if G is not None: # no need to re-compute, just return it
-    return G;
-
-  # grad: maps R^{d} -> R^{dxd}, (maps vector to tensor)
-  num_mesh_pts = num_mesh_x*num_mesh_y;
-  GG = np.zeros((num_mesh_pts*num_dim_sq,num_mesh_x,num_mesh_y,num_dim));
-
-  Gdir = [];
-  # x-derivative (scalar) 
-  Gx = np.zeros((3,3));
-  Gx[0,0] = -0.5; Gx[0,2] = -0.5;
-  Gx[2,0] = 0.5; Gx[2,2] = 0.5;
-  Gx = Gx/(2*deltaX);
-  Gdir.append(Gx);
-
-  # y-derivative (scalar)
-  Gy = np.zeros((3,3));
-  Gy[0,0] = -0.5; Gy[0,2] = 0.5;
-  Gy[2,0] = -0.5; Gy[2,2] = 0.5;
-  Gy = Gy/(2*deltaX);
-  Gdir.append(Gy);
-
-  # @ optimize 
-  vec_I = np.zeros(num_dim,dtype=int);
-  for j in range(0,num_mesh_y): 
-    for i in range(0,num_mesh_x):
-      vec_I[0] = i; vec_I[1] = j; 
-      vec_Im1 = vec_I + 0; vec_Ip1 = vec_I + 0; # make copies
-      I0_mesh = vec_I[1]*num_mesh_x*num_dim_sq + vec_I[0]*num_dim_sq + 0;
-
-      for a in range(0,num_dim):
-        for b in range(0,num_dim):
-          # partial_b u_a
-          for c1 in range(0,3):
-            for c2 in range(0,3):
-              ii = i + c1 - 1; jj = j + c2 - 1; 
-              if ii < 0: ii = num_mesh_x + ii;
-              if ii >= num_mesh_x: ii = ii - num_mesh_x;
-              if jj < 0: jj = num_mesh_y + jj;
-              if jj >= num_mesh_y: jj = jj - num_mesh_y;
-              GG[I0_mesh + a*num_dim + b,ii,jj,a] = Gdir[b][c1,c2];
-
-  G = GG.reshape((num_mesh_pts*num_dim_sq,num_mesh_pts*num_dim));
-
-  if flag_save:
-    extras['G'] = G;
-
-  return G;
-
-def compute_matrix_tensor_grad3(Y,params,extras=None):
-  """ Gradient acting on tensor fields with extra 
-      averaging to help avoid the checkerboard instability. 
-      Combines usual central difference gradient with a 
-      diagonal gradient stencil. 
-  """
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX \
-    = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-
-  if num_dim != 2:
-    raise Exception("assumes num_dim = 2, input gave num_dim = " + str(num_dim));
-
-  if extras is not None:
-    G,flag_save,alpha = tuple(map(extras.get,['G','flag_save','alpha']));
-  else:
-    G,alpha = (None,None);
-    flag_save = None;
-
-  if flag_save is None:
-    flag_save = False; 
-
-  if G is not None: # no need to re-compute, just return it
-    return G;
-
-  if alpha is None:
-    alpha = 0.5; 
-
-  if G is None:
-    G1 = compute_matrix_tensor_grad(Y,params); 
-    G2 = compute_matrix_tensor_grad2(Y,params); 
-    G = (1 - alpha)*G1 + alpha*G2; 
-
-  if flag_save:
-    extras.update({'G':G});
-
-  return G; 
-
 
 def compute_matrix_vec_grad(Y,params,extras=None):
   """ Gradient acting on scalar fields, such as $\nabla f$. """
+
   # get params data 
   num_mesh_x,num_mesh_y,num_dim,deltaX \
     = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
@@ -646,222 +415,6 @@ def compute_matrix_vec_grad(Y,params,extras=None):
 
   return G;
 
-def compute_matrix_vec_grad2(Y,params,extras=None):
-  """ Gradient acting on vec fields with extra 
-      averaging to help avoid the checkerboard instability. 
-      Computes consistently $\nabla u$.
-  """
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX \
-    = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
-  num_dim_sq = num_dim*num_dim; # tensor dimension 
-
-  if num_dim != 2:
-    raise Exception("assumes num_dim = 2, input gave num_dim = " + str(num_dim));
-
-  if extras is not None:
-    G,flag_save = tuple(map(extras.get,['G','flag_save']));
-    if flag_save is None:
-      flag_save = False; 
-  else:
-    G = None;
-    flag_save = False; 
-
-  if G is not None: # no need to re-compute, just return it
-    return G;
-
-  # grad: maps R^{d} -> R^{dxd}, (maps vector to tensor)
-  num_mesh_pts = num_mesh_x*num_mesh_y;
-  GG = np.zeros((num_mesh_pts*num_dim,num_mesh_x,num_mesh_y));
-
-  Gdir = [];
-  # x-derivative (scalar) 
-  Gx = np.zeros((3,3));
-  Gx[0,0] = -0.5; Gx[0,2] = -0.5;
-  Gx[2,0] = 0.5; Gx[2,2] = 0.5;
-  Gx = Gx/(2*deltaX);
-  Gdir.append(Gx);
-
-  # y-derivative (scalar)
-  Gy = np.zeros((3,3));
-  Gy[0,0] = -0.5; Gy[0,2] = 0.5;
-  Gy[2,0] = -0.5; Gy[2,2] = 0.5;
-  Gy = Gy/(2*deltaX);
-  Gdir.append(Gy);
-
-  # @ optimize 
-  vec_I = np.zeros(num_dim,dtype=int);
-  for j in range(0,num_mesh_y): 
-    for i in range(0,num_mesh_x):
-      vec_I[0] = i; vec_I[1] = j; 
-      vec_Im1 = vec_I + 0; vec_Ip1 = vec_I + 0; # make copies
-      I0_mesh = vec_I[1]*num_mesh_x*num_dim + vec_I[0]*num_dim + 0;
-
-      for b in range(0,num_dim):
-        # partial_b u_a
-        for c1 in range(0,3):
-          for c2 in range(0,3):
-            ii = i + c1 - 1; jj = j + c2 - 1; 
-            if ii < 0: ii = num_mesh_x + ii;
-            if ii >= num_mesh_x: ii = ii - num_mesh_x;
-            if jj < 0: jj = num_mesh_y + jj;
-            if jj >= num_mesh_y: jj = jj - num_mesh_y;
-            GG[I0_mesh + b,ii,jj] = Gdir[b][c1,c2];
-
-  G = GG.reshape((num_mesh_pts*num_dim,num_mesh_pts));
-
-  if flag_save:
-    extras['G'] = G;
-
-  return G;
-
-
-def compute_matrix_vec_grad3(Y,params,extras=None):
-  """ Gradient acting on vec fields with extra 
-      averaging to help avoid the checkerboard instability. 
-      Combines usual central difference gradient with a 
-      diagonal gradient stencil. 
-  """
-  # get params data 
-  num_mesh_x,num_mesh_y,num_dim,deltaX \
-    = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim','deltaX']));  
-  num_dim_sq = num_dim*num_dim; # vec dimension 
-
-  if num_dim != 2:
-    raise Exception("assumes num_dim = 2, input gave num_dim = " + str(num_dim));
-
-  if extras is not None:
-    G,flag_save,alpha = tuple(map(extras.get,['G','flag_save','alpha']));
-  else:
-    G,alpha = (None,None);
-    flag_save = None;
-
-  if flag_save is None:
-    flag_save = False; 
-
-  if G is not None: # no need to re-compute, just return it
-    return G;
-
-  if alpha is None:
-    alpha = 0.5; 
-
-  if G is None:
-    G1 = compute_matrix_vec_grad(Y,params); 
-    G2 = compute_matrix_vec_grad2(Y,params); 
-    G = (1.0 - alpha)*G1 + alpha*G2; 
-
-  if flag_save:
-    extras.update({'G':G});
-
-  return G; 
-
-def compute_matrix_tensor_div2(Y,params,extras=None):
-  """ Divergence acting on tensor fields with extra 
-      averaging to help avoid the checkerboard instability. 
-  """
-
-  if extras is not None:
-    D,G,flag_save = tuple(map(extras.get,['D','G','flag_save']));
-  else:
-    D,G = (None,None);
-    flag_save = None; 
-
-  if flag_save is None:
-    flag_save = False; 
-
-  if D is not None: # no need to re-compute, just return it
-    return D;
-
-  if G is None:
-    G = compute_matrix_tensor_grad2(Y,params,extras);
-
-  D = -G.T; 
-
-  if flag_save:
-    extras.update({'D':D});
-
-  return D;
-
-def compute_matrix_vec_div2(Y,params,extras=None):
-  """ Divergence acting on vector fields with extra 
-      averaging to help avoid the checkerboard instability. 
-  """
-
-  if extras is not None:
-    D,G,flag_save = tuple(map(extras.get,['D','G','flag_save']));
-  else:
-    D,G = (None,None);
-    flag_save = None; 
-
-  if flag_save is None:
-    flag_save = False; 
-
-  if D is not None: # no need to re-compute, just return it
-    return D;
-
-  if G is None:
-    G = compute_matrix_vec_grad2(Y,params,extras);
-
-  D = -G.T; 
-
-  if flag_save:
-    extras.update({'D':D});
-
-  return D;
-
-def compute_matrix_tensor_div3(Y,params,extras=None):
-  """ Divergence acting on tensor fields with extra 
-      averaging to help avoid the checkerboard instability. 
-  """
-
-  if extras is not None:
-    D,G,flag_save = tuple(map(extras.get,['D','G','flag_save']));
-  else:
-    D,G = (None,None);
-    flag_save = None; 
-
-  if flag_save is None:
-    flag_save = False; 
-
-  if D is not None: # no need to re-compute, just return it
-    return D;
-
-  if G is None:
-    G = compute_matrix_tensor_grad3(Y,params,extras);
-
-  D = -G.T; 
-
-  if flag_save:
-    extras.update({'D':D});
-
-  return D;
-
-def compute_matrix_vec_div3(Y,params,extras=None):
-  """ Divergence acting on vector fields with extra 
-      averaging to help avoid the checkerboard instability. 
-  """
-
-  if extras is not None:
-    D,G,flag_save = tuple(map(extras.get,['D','G','flag_save']));
-  else:
-    D,G = (None,None);
-    flag_save = None; 
-
-  if flag_save is None:
-    flag_save = False; 
-
-  if D is not None: # no need to re-compute, just return it
-    return D;
-
-  if G is None:
-    G = compute_matrix_vec_grad3(Y,params,extras);
-
-  D = -G.T; 
-
-  if flag_save:
-    extras.update({'D':D});
-
-  return D;
 
 def peskin_delta(rr,extras=None):
  
@@ -1002,24 +555,6 @@ def compute_matrix_Lambda_op(Y,params,extras=None):
   matrix_Lambda_op = np.transpose(matrix_Gamma_op); # transpose 
 
   return matrix_Lambda_op;
-
-def extract_matrix_vec_div(matrix_tensor_div,params):
-    num_mesh_x,num_mesh_y,num_dim = tuple(map(params.get,['num_mesh_x','num_mesh_y','num_dim']));
-    num_dim_sq = num_dim*num_dim;
-    matrix_vec_div = np.zeros((num_mesh_x*num_mesh_y,num_mesh_x*num_mesh_y*num_dim)); 
-    ii1 = 0; ii2 = ii1 + num_mesh_x*num_mesh_y;
-    jj1 = 0; jj2 = jj1 + num_mesh_x*num_mesh_y*num_dim;
-    i1 = 0; i2 = i1 + num_mesh_x*num_mesh_y*num_dim;
-    j1 = 0; j2 = j1 + num_mesh_x*num_mesh_y*num_dim_sq;
-    matrix_vec_div[ii1:ii2,jj1:jj2:num_dim] = matrix_tensor_div[i1:i2:num_dim,j1:j2:num_dim_sq];
-    ii1 = 0; ii2 = ii1 + num_mesh_x*num_mesh_y;
-    jj1 = 1; jj2 = jj1 + num_mesh_x*num_mesh_y*num_dim;
-    i1 = 0; i2 = i1 + num_mesh_x*num_mesh_y*num_dim;
-    j1 = 1; j2 = j1 + num_mesh_x*num_mesh_y*num_dim_sq;
-    matrix_vec_div[ii1:ii2,jj1:jj2:num_dim] = matrix_tensor_div[i1:i2:num_dim,j1:j2:num_dim_sq];
-
-    return matrix_vec_div; 
-
 
 def compute_M_S_j(Y,params):
   pass;
