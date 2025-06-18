@@ -1,22 +1,17 @@
-# Concentration fields with continuous temperature fields 
+# protein-membrane simulations with fluctuating concentration fields 
 
 print("="*80);
 
-# -- Imports
+# -- imports
 import numpy as np
 import pickle;
 import time; 
 import os; 
 import sys;
-import ipdb;
 import shutil;
-import re; # regular expressions
+import re; 
 
 import argparse; 
-
-import vtk
-from vtk.util.numpy_support import vtk_to_numpy
-from vtk.util.numpy_support import numpy_to_vtk
 
 import pkg.selm_ne as sne; 
 
@@ -24,7 +19,7 @@ script_base_name = 'conc_field_01';
 script_ext = 'py';
 
 # --
-# function definitions
+# functions
 
 def create_Y_I(params):
   num_mesh_x,num_mesh_y,num_particles,num_dim =\
@@ -42,7 +37,6 @@ def create_Y_I(params):
   Y_I['I1_interface_theta'] = I; I += num_interfaces; Y_I['I2_interface_theta'] = I;
 
   return Y_I; 
-
 
 def get_parts(Y,params):
   dd = {};
@@ -75,8 +69,6 @@ def print_near_zero_warnings(params):
     print(str(warn_list)); 
     print("");
 
-
-
 def phi_energy__eta_gauss_01(Y,extras):
   params,k1,sigma_sq,flag_compute_grad = \
     tuple(map(extras.get,['params','k1','sigma_sq',
@@ -99,7 +91,7 @@ def phi_energy__eta_gauss_01(Y,extras):
   eta = k1*eta/ZZ;
 
   # energy
-  phi = -eta; # potential negative, so attracted to sphere
+  phi = -eta; # potential negative, so attracted 
 
   # gradient
   if flag_compute_grad:
@@ -142,8 +134,6 @@ def phi_energy__zero(Y,extras):
     grad_X_phi = None; 
 
   return phi,grad_r_phi,grad_X_phi; 
-
-
 
 def phi_energy__sin_01(Y,extras):
   params,k0 = tuple(map(extras.get,['params','k0']));
@@ -212,12 +202,6 @@ def func_Psi__well_02(XX,extras):
 
   XX_0 = np.expand_dims(X_0,0);
 
-  #x0 = X_0[0]; y0 = X_0[1];
-  #num_x1 = 4; num_x2 = 4;
-  #sx = 0; sy = 0; 
-  #dx = 4.0/(num_x1-1); dy = 4.0/(num_x2-1); 
-
-  #sigma_sq = 0.2**2; 
   x0 = 5/3.0; y0 = 5/3.0;
   num_x1 = 4; num_x2 = 4;
   sx = 0; sy = 0; 
@@ -236,10 +220,7 @@ def func_Psi__well_02(XX,extras):
       else:
         sy = 0.0; 
       xp0 = x0 - k1*dx - sx; yp0 = y0 - k2*dy - sy;
-      #xx = x - xp0; yy = y - yp0;
       XX_0[0,0] = xp0; XX_0[0,1] = yp0; 
-      #r = np.sqrt(xx*xx + yy*yy); 
-      #nv_out[:,2] += -c2*np.exp(-r*r/(0.3*sigma_sq));
       Psi_single = -c2*np.exp(-np.sum(np.power((XX - XX_0),2),1)/(2.0*sigma_sq)); 
       Psi += Psi_single;
       grad_Psi += -((XX - XX_0)/sigma_sq)*np.expand_dims(Psi_single,1); 
@@ -250,7 +231,6 @@ def func_Psi__zero(XX,extras):
   Psi = 0.0; grad_Psi = 0*XX;
 
   return Psi,grad_Psi; 
-
 
 def func_eta__gauss_01(xx,X,extras):
   sigma_sq, = tuple(map(extras.get,['sigma_sq']));
@@ -284,8 +264,6 @@ def U_q_energy__conc_grad_01(Y,extras):
   XX = np.expand_dims(X,0);
 
   U_q__psi,grad_X_U_q__psi = func_Psi(XX,extras_Psi);
-  #else:
-  #  U_q__psi = 0.0*U_q__conc; grad_X_U_q__psi = 0.0*grad_X_U_q__psi; 
 
   # -- total
   U_q = U_q__conc + U_q__psi; 
@@ -330,7 +308,6 @@ def compute_S_j(Y,params):
 
   return s_j;  
 
-
 def compute_S(Y,params,extras=None):
   Y_I,c_v,c_v_I = tuple(map(params.get,['Y_I','c_v','c_v_I']));
   num_particles,num_dim,deltaX = tuple(map(
@@ -354,8 +331,6 @@ def compute_S(Y,params,extras=None):
   interface_q,interface_theta = \
     tuple(map(dd.get,['interface_q','interface_theta']));
 
-  # locals().update(**Y_I)  # quick way to make dict elements 
-  # local variables (not best practice though)
   I1_particle_q,I2_particle_q = \
     tuple(map(dd.get,['I1_particle_q','I2_particle_q']));
   I1_particle_theta,I2_particle_theta = \
@@ -422,12 +397,12 @@ def compute_U_j(Y,params):
   c_j_of_q = 0; 
   u_j[i1:i2] = c_P*particle_theta + c_j_of_q;
 
-  j = ii['conc']; c_C = c_v[j]; # note: internal energy for discrete box  
+  j = ii['conc']; c_C = c_v[j]; 
   i1 = i2; i2 = i1 + num_conc_theta; 
   phi,grad_r_phi,grad_X_phi = func_phi(Y,extras_func_phi);
   u_j[i1:i2] = c0_conc*phi*conc_q; 
   c_j_of_q = 0; 
-  u_j[i1:i2] += c_C*conc_theta + c_j_of_q; # builds in the deltaV in c_C
+  u_j[i1:i2] += c_C*conc_theta + c_j_of_q; 
 
   j = ii['interface']; c_I = c_v[j];
   i1 = i2; i2 = i1 + num_interface_theta; 
@@ -489,7 +464,6 @@ def compute_E(Y,params,extras=None):
   conc_q,conc_theta = tuple(map(dd.get,['conc_q','conc_theta']));
   interface_q,interface_theta = tuple(map(dd.get,['interface_q','interface_theta']));
 
-  # locals().update(**Y_I)  # quick way to make dict elements local variables (not best practice though)
   I1_particle_q,I2_particle_q = tuple(map(dd.get,['I1_particle_q','I2_particle_q']));
   I1_particle_theta,I2_particle_theta = tuple(map(dd.get,['I1_particle_theta','I2_particle_theta']));
 
@@ -606,7 +580,6 @@ def compute_D_E(Y,params,extras=None):
       = tuple(map(params.get,['func_phi','extras_func_phi']));
 
     phi,grad_r_phi,grad_X_phi = func_phi(Y,extras_func_phi);
-    #phi_vec = np.expand_dims(phi,1);
 
     c0_conc, = tuple(map(params.get,['c0_conc']));
     c0 = c0_conc;
@@ -642,7 +615,6 @@ def compute_D_S_j(Y,params):
   interface_q,interface_theta = tuple(map(dd.get,['interface_q','interface_theta']));
 
   Y_I_parts = dd = sne.get_parts_I(params);
-  # locals().update(**Y_I)  # quick way to make dict elements local variables (not best practice though)
   I1_particle_q,I2_particle_q = tuple(map(dd.get,['I1_particle_q','I2_particle_q']));
   I1_particle_theta,I2_particle_theta = tuple(map(dd.get,['I1_particle_theta','I2_particle_theta']));
 
@@ -695,15 +667,6 @@ def compute_D_S_j(Y,params):
   i1_theta2 = i2_theta1; i2_theta2 = i1_theta2 + num_conc_theta; # conc theta 
   i1_theta3 = i2_theta2; i2_theta3 = i1_theta3 + num_interface_theta; # interface theta 
 
-  # (computed already above) 
-  #grad_particle_q = np.zeros(num_particle_q);
-  #grad_particle_p = 0.0*particle_p;
-  #grad_particle_theta = c_P/particle_theta; 
-
-  # (computed already above) 
-  #grad_conc_q = np.zeros(num_conc_q);
-  #grad_conc_theta = (c_F/conc_theta); # *deltaV, 
-
   grad_interface_q = np.zeros(num_interface_q);
   grad_interface_theta = c_I/interface_theta;
 
@@ -718,11 +681,6 @@ def compute_D_S_j(Y,params):
 
   return grad_D_S_j; 
 
-
-
-#-------------
-#export data
-#-------------
 def export_vtk_particle_data(output_data):
   params,base_dir,base_dir_timestep,time_index,flag_verbose = tuple(map(output_data.get,
     ['params','base_dir','base_dir_timestep','time_index','flag_verbose']));
@@ -751,7 +709,6 @@ def export_vtk_particle_data(output_data):
   
   sne.write_vtp_data(filename,points,field_list);  
  
-# =============================
 def export_vtk_conc_data(output_data):
   params,base_dir,base_dir_timestep,time_index,flag_verbose = \
     tuple(map(output_data.get,
@@ -792,7 +749,6 @@ def export_vtk_conc_data(output_data):
   
   sne.write_vtr_data(filename,xx,field_list);  
 
-# =============================
 def export_system_state(output_data):
   base_dir,base_dir_timestep,time_index,flag_verbose = tuple(map(output_data.get,
     ['base_dir','base_dir_timestep','time_index','flag_verbose']));
@@ -839,7 +795,6 @@ def export_energy_flux(output_data):
   save_data = dict(filter(lambda item: item[0] in extract_keys, output_data.items()));
   fid = open(filename,'wb'); pickle.dump(save_data,fid); fid.close();
 
-# =============================
 def export_data(output_data):
  
   time_index,flag_save_system_state,skip_save_system_state, \
@@ -869,8 +824,6 @@ def export_data(output_data):
   # energy flux 
   if flag_save_energy_flux and time_index % skip_save_energy_flux == 0:
     export_energy_flux(output_data);
-
-
 
 def save_data(params,extras):
   time_index, = tuple(map(params.get,['time_index']));
@@ -942,11 +895,8 @@ def save_data(params,extras):
 
   export_data(output_data);
 
-
-# =============================
 def init_0(params):
   Y_I = params['Y_I'];
-  #locals().update(**Y_I); # adds indices to local variables 
   num_mesh_x,num_mesh_y,deltaX = \
     tuple(map(params.get,['num_mesh_x','num_mesh_y','deltaX']));
   Lx = num_mesh_x*deltaX; Ly = num_mesh_y*deltaX;
@@ -976,6 +926,7 @@ def init_0(params):
   num_interface_theta = I2_interface_theta - I1_interface_theta;
 
   Y_0 = np.zeros(Y_I['I2_interface_theta']); ii = Y_I
+
   # particle
   num_particles = params['num_particles']; 
   particle_q = np.zeros(num_particles*num_dim);
@@ -995,19 +946,8 @@ def init_0(params):
   sigma_sq = 0.2*0.2;
   conc_q[:] = 1.0 + np.exp(-np.sum(np.power((xx - XX_0),2),1)/(2.0*sigma_sq)); 
 
-  #i0 = num_mesh_x//2; j0 = num_mesh_y//2; 
-  #I0 = j0*num_mesh_x*num_dim + i0*num_dim; d = 0;
   conc_theta = np.zeros(num_conc_theta);
-  #conc_theta = 0*conc_theta + 1.0; 
-  #conc_theta[:] = 1.0 + 0.1*np.sin(2.0*np.pi*k1*x1/Lx)*np.sin(2.0*np.pi*k2*x2/Ly);
   conc_theta[:] = 3.0 + 0.0*x1; #3.0 + 2.5*np.sin(2.0*np.pi*k1*x1/Lx);
-
-  #k1 = 1; k2 = 1;
-  #conc_theta += 0.5*np.sin(2*np.pi*k1*x1/Lx)*np.sin(2*np.pi*k2*x2/Ly);
-  #i0 = num_mesh_x//2; j0 = num_mesh_y//2; 
-  #I0 = j0*num_mesh_x + i0; d = 0;
-  #conc_theta[I0] += 1.0*(1.0/(deltaX*deltaX));
-  #conc_theta[I0] += 2.0;
 
   sne.set_comp(Y_0,'I1_conc_q','I2_conc_q',Y_I,conc_q);
   sne.set_comp(Y_0,'I1_conc_theta','I2_conc_theta',Y_I,conc_theta);
@@ -1015,7 +955,6 @@ def init_0(params):
   # interface
   interface_q = np.zeros(num_interface_q) + 1.2;
   interface_theta = np.zeros(num_interface_theta) + particle_theta;
-  #interface_theta = np.zeros(num_interface_theta) + 1.0;
 
   sne.set_comp(Y_0,'I1_interface_q','I2_interface_q',Y_I,interface_q);
   sne.set_comp(Y_0,'I1_interface_theta','I2_interface_theta',Y_I,interface_theta);
@@ -1030,7 +969,6 @@ def get_params(params_filename,params_ext=None):
 
   if params_ext == 'py': # run to generate params to be setup by a .py file
     loc = {'main_globals':globals()}; # collects local data from execution to return results
-    #loc.update(locals());   # to pass in locals 
     exec(open(params_filename).read(),globals(),loc); 
     params = loc['params'];
   elif params_ext == 'pickle': # load using .pickle
@@ -1040,7 +978,6 @@ def get_params(params_filename,params_ext=None):
   else:
     raise Exception("Not recognized, params_ext = " + params_ext); 
 
-  #print("params = " + str(params)); 
   return params; 
 
 def process_func_key(params,f_key,loc=None,flag_extras_params=False):
@@ -1070,89 +1007,10 @@ def process_func_key(params,f_key,loc=None,flag_extras_params=False):
   else: # if key not in params set the function to None
     cmd_str = "params['%s'] = None"%(func_key);
     exec(cmd_str); # execute the command (to set function) 
- 
-def update_state__Euler_Marayuma(Y_n,params,extras): 
-  flag_compute_K,flag_stochastic,flag_test_B_j = \
-    tuple(map(params.get,['flag_compute_K','flag_stochastic','flag_test_B_j']));
-
-  deltaT,num_heat_bodies = \
-    tuple(map(params.get,['deltaT','num_heat_bodies']));
-
-  extras_bar_L,extras_bar_K_j,extras_g_thm,flag_save_data = \
-    tuple(map(extras.get,['extras_bar_L','extras_bar_K_j',
-                          'extras_g_thm','flag_save_data']));
-
-  if flag_save_data is None:
-    flag_save_data = False; 
-
-  if flag_save_data:
-    save_data, = tuple(map(extras.get,['save_data']));
-    if save_data is None:
-      save_data = {}; # create new dict (otherwise re-use)
-      extras['save_data'] = save_data; 
-
-  # compute the gradients in energy and entropy
-  D_E = compute_D_E(Y_n,params); D_S_j = compute_D_S_j(Y_n,params); 
-
-  # compute the bar_L and bar_K_j matrices
-
-  # bar_L 
-  extras_bar_L.update({'D_S_j':D_S_j});
-  bar_L,bar_L_indices = sne.compute_bar_L_conc(Y_n,params,extras_bar_L); 
-  bar_L__D_E__dt = np.dot(bar_L,D_E)*deltaT; 
-  sne.add_in_components(Y_np1,bar_L__D_E__dt,
-                        bar_L_indices['I_out'],
-                        bar_L_indices['I_local_out']);
-
-  # bar_K
-  if flag_compute_K:
-    extras_bar_K_j.update({'D_E':D_E,'D_S_j':D_S_j});
-    bar_K_j,bar_K_j_indices = \
-      sne.compute_bar_K_j_conc(Y_n,params,extras_bar_K_j);
-    
-    ii = Y_I; num_K_j = len(bar_K_j);
-    for j in range(0,num_K_j): # @ optimize
-      bar_K_j__D_S_j__dt = np.dot(bar_K_j[j],D_S_j[j])*deltaT;
-      sne.add_in_components(Y_np1,bar_K_j__D_S_j__dt,
-                            bar_K_j_indices['I_out'][j],
-                            bar_K_j_indices['I_local_out'][j]); 
-
-    if flag_stochastic: 
-      # Compute fluctuation constributions.
-      # g_thm dt =  k_B*div_Y(K)dt + B(Y)*dW_t,
-      extras_g_thm.update({'flag_save_B_j_tensors':True,
-                           'flag_save_div_K_j':True,
-                           'bar_K_j':bar_K_j});
-
-      g_thm_j_dt,B_j_indices = sne.compute_g_thm_j_dt__conc(Y_n,params,extras_g_thm);
-      I_local_out = B_j_indices['I_local_out']; I_out = B_j_indices['I_out'];
-      for j in range(0,num_heat_bodies): # @ optimize
-        sne.add_in_components(Y_np1,g_thm_j_dt[j],
-                              B_j_indices['I_out'][j],
-                              B_j_indices['I_local_out'][j]);
-
-  if flag_particle_periodic:  # resets particle mod L to the domain 
-    sne.map_particle_periodic(Y_np1,params);  
-
-
-  if flag_save_data:
-    ss = save_data; # already linked with extras
-    ss.update({'D_E':D_E,'D_S_j':D_S_j,
-               'bar_L':bar_L,'bar_L_indices':bar_L_indices, 
-               'bar_K_j':bar_K_j,'bar_K_j_indices':bar_K_j_indices,
-               'g_thm_j_dt':g_thm_j_dt,'B_j_indices':B_j_indices});
-
-  return Y_np1; 
-
 
 def update_state__Euler_Heun(Y_n,params,extras):
-  """ avoids divergence calculation by discretizing 
-      stratonovich ito integrals.  Discussed in 
-      Kloeden and Platen book, pg 276.  This is basically
-      a one step Runge-Kutta Method.  
-      Euler prediction, then trapezoidal rule. """
 
-  # Update using Heun's Method
+  # update using Heun's Method
   flag_compute_K,flag_stochastic,flag_test_B_j = \
     tuple(map(params.get,['flag_compute_K','flag_stochastic','flag_test_B_j']));
 
@@ -1172,16 +1030,11 @@ def update_state__Euler_Heun(Y_n,params,extras):
       save_data = {}; # create new dict (otherwise re-use)
       extras['save_data'] = save_data; 
 
-  # -- first step
-  Y_np1 = 0.0*Y_n + Y_n; # @optimize: re-use previous array 
-  hat_Y_np1 = Y_np1; # this ensures updates Y_np1 as we compute 
+  Y_np1 = 0.0*Y_n + Y_n; 
+  hat_Y_np1 = Y_np1; 
 
-  # compute the gradients in energy and entropy
   D_E_n = compute_D_E(Y_n,params); D_S_j_n = compute_D_S_j(Y_n,params); 
 
-  # compute the bar_L and bar_K_j matrices
-
-  # bar_L (t_n) (@optimize re-use above) 
   extras_bar_L.update({'D_S_j':D_S_j_n});
   bar_L,bar_L_indices = sne.compute_bar_L_conc(Y_n,params,extras_bar_L); 
   half_bar_L__D_E_n__dt = 0.5*np.dot(bar_L,D_E_n)*deltaT; 
@@ -1203,8 +1056,6 @@ def update_state__Euler_Heun(Y_n,params,extras):
                             bar_K_j_indices['I_local_out'][j]); 
 
     if flag_stochastic: 
-      # Compute fluctuation constributions.
-      # g_thm dt =  k_B*div_Y(K)dt + B(Y)*dW_t,
       extras_g_thm.update({'flag_save_B_j_tensors':True,
                            'flag_save_div_K_j':True,
                            'bar_K_j':bar_K_j,
@@ -1229,17 +1080,8 @@ def update_state__Euler_Heun(Y_n,params,extras):
     if flag_stochastic:
       ss.update({'g_thm_j_dt':g_thm_j_n_dt,'B_j_indices':B_j_indices});
 
-  # -- second step
-
-  # Estimate state using the Euler-Marayuma Method
-  # @optimize (can re-use results above)
-  # tilde{Y}_{np1} = Y_n + 2.0*(hat{Y}_{n+1} - Y_n)
-  #                = 2.0*hat{Y}_{n+1} - Y_n
-  #tilde_Y_np1 = update_state__Euler_Marayuma(Y_n,params,extras);
-  # Note, need to use saved dW as above for updating.
   tilde_Y_np1 = 2.0*hat_Y_np1 - Y_n;
 
-  # compute the gradients in energy and entropy
   D_E_np1 = compute_D_E(tilde_Y_np1,params); 
   D_S_j_np1 = compute_D_S_j(tilde_Y_np1,params); 
 
@@ -1264,8 +1106,6 @@ def update_state__Euler_Heun(Y_n,params,extras):
                             bar_K_j_indices['I_local_out'][j]); 
 
     if flag_stochastic: 
-      # Compute fluctuation constributions.
-      # g_thm dt =  k_B*div_Y(K)dt + B(Y)*dW_t,
       extras_g_thm.update({'flag_save_B_j_tensors':True,
                            'flag_save_div_K_j':True,
                            'bar_K_j':bar_K_j,
@@ -1286,17 +1126,15 @@ def update_state__Euler_Heun(Y_n,params,extras):
 
   return Y_np1; 
 
-
 def trigger_pre__null(Y,params,extras=None):
   pass;
 
 def trigger_post__null(Y,params,extras=None):
   pass;
 
-# -- Set up 
-#
+# -- main 
 
-# -- parse file if given on command line 
+# parse file if given on command line 
 parser = argparse.ArgumentParser();
 parser.add_argument('-p','--param_filename', help='parameters for the run', 
                     default=None);
@@ -1328,8 +1166,6 @@ if args.restart_filename is not None:
 else:
   flag_restart_sim = False;
 
-# we de-reference here, but might be better to do this below, so clear where source
-# of the values are coming from
 params = {};
 if flag_params_parsed:
   base_dir,gpu_device_str = tuple(
@@ -1356,7 +1192,6 @@ if flag_params_parsed:
 else:
   raise Exception("expecting parameters specified"); 
 
-# -- Create output directories
 base_name = params['base_name'];
 output_dir = base_dir;
 
@@ -1377,10 +1212,8 @@ params.update({'base_name':base_name,
                'debug_dir':debug_dir});
 
 
-# setup so nan raises exception first time computed
 np.seterr(invalid='raise');
 
-# -- Set up parameters
 print_near_zero_warnings(params);
 
 num_dim = params['num_dim'];
@@ -1460,8 +1293,6 @@ else:
   Y_0 = func_init(params,extras_init);
   params.update({'Y_0':Y_0,'time_index':0});
 
-# -- Integrator
-# Euler-Maruyama integrator
 flag_compute_K,flag_stochastic,flag_compute_div_K,flag_particle_periodic = \
   tuple(map(params.get,['flag_compute_K','flag_stochastic',
                         'flag_compute_div_K','flag_particle_periodic']));
@@ -1540,7 +1371,7 @@ extras_update_state.update({'time_index':0,
                             'extras_g_thm':extras_g_thm,
                             'flag_save_data':True});
 
-# --- start simulations 
+# start simulations 
 Y_np1 = np.zeros(Y_n.shape); # make array of the same shape  
 # update state variables to value at current time step
 Y_np1[:] = Y_n[:]; # start as base value (make a copy of values) 
@@ -1577,5 +1408,6 @@ for II in range(0,num_timesteps):
   Y_n[:] = Y_np1[:]; # setup for next time-step (copy values)
   
 print("-"*80);
-print("Done.");
+print("done.");
 print("="*80);
+
