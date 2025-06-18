@@ -20,15 +20,11 @@ from vtk.util.numpy_support import numpy_to_vtk
 
 import pkg.selm_ne as sne; 
 
-debug_to_csv = sne.debug_to_csv; 
-
 script_base_name = 'conc_field_01';
 script_ext = 'py';
 
 # --
 # function definitions
-#
-
 
 def create_Y_I(params):
   num_mesh_x,num_mesh_y,num_particles,num_dim =\
@@ -254,17 +250,6 @@ def func_Psi__zero(XX,extras):
   Psi = 0.0; grad_Psi = 0*XX;
 
   return Psi,grad_Psi; 
-
-def debug_check_Psi(nx,ny,func_Psi,extras_Psi):
-  x1,x2=np.linspace(0,2.0,nx),np.linspace(0,2.0,ny);
-  mesh_x,mesh_y = np.meshgrid(x1,x2);
-  xx = np.vstack((mesh_x.flatten(),mesh_y.flatten())).T;
-  uu,gg=func_Psi(xx,extras_Psi);
-  filename="%s/debug_energy_Psi.pickle"%debug_dir;
-  print("filename = " + filename); 
-  fid = open(filename,'wb');
-  pickle.dump({'nx':nx,'ny':ny,'xx':xx,'Psi':uu,'grad_Psi':gg},fid);
-  fid.close(); 
 
 
 def func_eta__gauss_01(xx,X,extras):
@@ -1138,10 +1123,6 @@ def update_state__Euler_Marayuma(Y_n,params,extras):
       extras_g_thm.update({'flag_save_B_j_tensors':True,
                            'flag_save_div_K_j':True,
                            'bar_K_j':bar_K_j});
-      if flag_test_B_j: # debugging
-        print("WARNING: testing B_j__conc, may want to disable in simulations.");
-        extras_test_B_j = {'extras_bar_K_j':extras_bar_K_j};
-        sne.test_B_j__conc(Y_n,params,extras_test_B_j);
 
       g_thm_j_dt,B_j_indices = sne.compute_g_thm_j_dt__conc(Y_n,params,extras_g_thm);
       I_local_out = B_j_indices['I_local_out']; I_out = B_j_indices['I_out'];
@@ -1229,10 +1210,6 @@ def update_state__Euler_Heun(Y_n,params,extras):
                            'bar_K_j':bar_K_j,
                            'flag_save_dW':True,
                            'flag_use_saved_dW':False});
-      if flag_test_B_j: # debugging
-        print("WARNING: testing B_j__conc, may want to disable in simulations.");
-        extras_test_B_j = {'extras_bar_K_j':extras_bar_K_j};
-        sne.test_B_j__conc(Y_n,params,extras_test_B_j);
 
       g_thm_j_n_dt,B_j_indices = \
         sne.compute_g_thm_j_dt__conc(Y_n,params,extras_g_thm);
@@ -1294,10 +1271,6 @@ def update_state__Euler_Heun(Y_n,params,extras):
                            'bar_K_j':bar_K_j,
                            'flag_save_dW':False,
                            'flag_use_saved_dW':True});
-      if flag_test_B_j: # debugging
-        print("WARNING: testing B_j__conc, may want to disable in simulations.");
-        extras_test_B_j = {'extras_bar_K_j':extras_bar_K_j};
-        sne.test_B_j__conc(tilde_Y_np1,params,extras_test_B_j); 
 
       g_thm_j_np1_dt,B_j_indices = \
         sne.compute_g_thm_j_dt__conc(tilde_Y_np1,params,extras_g_thm); 
@@ -1381,92 +1354,7 @@ if flag_params_parsed:
     process_func_key(params,f_key,loc=locals(),flag_extras_params=False);
 
 else:
-
-  base_name = 'temp_conc'; run_index = 10; 
-  run_name = '%s_%.4d'%(base_name,run_index);
-  base_dir = './output/%s/%s'%(script_base_name,run_name);
-
-  params.update({'base_name':base_name,
-                 'base_dir':base_dir});
-
-  params.update({
-  'num_dim':2,                    # number of dimensions
-  'm':1.1,                        # mass of particle
-  'tilde_m':1.1,                  # mass of interface region
-  'rho':0.9,                      # mass density of fluid
-  'kappa_0':8.2e6,                  # heat conduction (fluid) 
-  #'kappa_0':0.0,                  # heat conduction (fluid) 
-  'kappa_P_I':1.3e2,              # heat conduction (particle-interface)
-  #'kappa_P_I':0,              # heat conduction (particle-interface)
-  'kappa_C_I':1.02e2,             # heat conduction per unit "volume" (conc-interface)
-  #'kappa_C_I':0,             # heat conduction per unit area (conc-interface)
-  'bar_kappa':1.2e-2,              # conc conduction (concentration) 
-  'c0_conc':1.1e0,                     # total concentration (concentration) 
-  'func_compute_D_E':compute_D_E, 
-  'num_particles':1,              # number of particles  
-  #'num_mesh_x':20,                # number grid points in x-direction
-  #'num_mesh_y':20,                # number grid points in y-direction
-  'num_mesh_x':5,                # number grid points in x-direction
-  'num_mesh_y':5,                # number grid points in y-direction
-  'deltaX':0.1,                   # mesh spacing 
-  'k_B':1e-5,                     # Boltzmann's constant
-  'deltaT':1e-3,                  # time-step
-  'num_timesteps':int(16/1e-3),  # duration of the simulation
-  #'k_B':1e-4,                     # Boltzmann's constant
-  #'k_B':1e-3,                     # Boltzmann's constant
-  'mu':0.08,                      # fluid viscosity 
-  #'mu':0.0,                       # fluid viscosity 
-  'gamma':5,                      # viscous drag from dashpot
-  'gamma_particle':5,             # particle drag 
-  #'gamma':0.0,                      # viscous drag from dashpot
-  'c_v':np.array([1.2,1.3e2,1.4]),  # specific heat of each type of heat body 
-                                  # (fluid c_v is specific heat per unit "volume") 
-  'c_v_I':{'particle':0,'conc':1,'interface':2}, # indices
-  'flag_compute_K':True,          # dissipation contributions (or purely L)
-  #'flag_compute_K':False,          # dissipation contributions (or purely L)
-  #'flag_stochastic':False,         # fluctuation contributions
-  'flag_stochastic':True,         # fluctuation contributions
-  'flag_incompressible':False,    # incompressibility constraints
-  #'flag_incompressible':True,    # incompressibility constraints
-  'flag_ambient_drag':False,      # drag on membrane from ambient fluid
-  'flag_compute_div_K':False,      # compute divergence
-  #'flag_compute_div_K':True,      # compute divergence
-  'flag_verbose':2,               # how much info. to print
-  'flag_flux_check':False,
-  'flag_particle_periodic':True   # resets particles to remain in periodic domain 
-  });
- 
-  Lx = params['num_mesh_x']*params['deltaX'];
-  Ly = params['num_mesh_y']*params['deltaX'];
-  params.update({
-  'func_phi':phi_energy_01,      # energy acting on local particle concentration
-  'extras_func_phi':{'params':params,
-                     'k0':1*2.0*np.pi/Lx},       # extras for energy
-  });
-
-  params.update({
-  'func_U_q':U_q_energy_01,      # energy acting on local particle
-  'extras_func_U_q':{'params':params,
-                     'k0':1*2.0*np.pi/Lx},       # extras for energy
-  });
-
-  num_timesteps = params['num_timesteps'];
-
-  params.update({
-  'func_update_state_str':"update_state__Euler_Marayuma", # numerical integrator 
-  'extras_update_state':{'params':None}
-  });
-  params.update({
-  'flag_save_vtk':True,
-  'skip_save_vtk':int(num_timesteps/1000),
-  #'skip_save_vtk':int(num_timesteps/1000),
-  'flag_save_system_state':True,
-  'skip_save_system_state':int(num_timesteps/1000),
-  'flag_save_tensors':False,
-  'skip_save_tensors':int(num_timesteps/1000),
-  'flag_save_energy_flux':True,
-  'skip_save_energy_flux':int(num_timesteps/1000),
-  });
+  raise Exception("expecting parameters specified"); 
 
 # -- Create output directories
 base_name = params['base_name'];
@@ -1493,8 +1381,6 @@ params.update({'base_name':base_name,
 np.seterr(invalid='raise');
 
 # -- Set up parameters
-# @params
-
 print_near_zero_warnings(params);
 
 num_dim = params['num_dim'];
@@ -1511,9 +1397,6 @@ bar_K_j_I = sne.get_bar_K_j_I(params); # get index table
 params.update({'bar_K_j_I':bar_K_j_I});
 
 # parameters for time-step integration
-#deltaT = 1e-3; t_final = 16; 
-#num_timesteps = int(t_final/deltaT); 
-#t_final = deltaT*num_timesteps;
 deltaT = params['deltaT']; num_timesteps = params['num_timesteps'];
 t_final = deltaT*num_timesteps; num_heat_bodies = len(params['c_v']);
 params.update({'num_heat_bodies':num_heat_bodies});
@@ -1562,7 +1445,6 @@ if flag_restart_sim:
   key_list = ['time_index','Y_0'];
   key_vals = tuple(map(restart_data.get(key_list)));
   params.update(dict(zip(key_list,key_vals)));
-  #params.update({'Y_0':Y_0,'time_index':time_index});
 else:
   time_index = 0;
   func_init_str,extras_init = \
@@ -1577,50 +1459,6 @@ else:
 
   Y_0 = func_init(params,extras_init);
   params.update({'Y_0':Y_0,'time_index':0});
-
-
-# debugging 
-flag = True;
-if flag:
-  extras_bar_K_conc = {'flag_save':True,'flag_save_energy_flux':True,
-                       'flag_flux_check':True};
-  bar_K_conc, bar_K_conc_indices = \
-    sne.compute_bar_K__conc1(Y_0,params,extras_bar_K_conc); 
-
-  extras_bar_K_particle = {'flag_save':True,'flag_save_energy_flux':True,
-                           'flag_flux_check':True};
-  bar_K_particle, bar_K_particle_indices = \
-    sne.compute_bar_K__overdamped_particle(Y_0,params,extras_bar_K_particle);
-
-  extras_bar_K_interface = {'flag_save':True,'flag_save_energy_flux':True,
-                            'flag_flux_check':True};
-  bar_K_interface, bar_K_interface_indices = \
-    sne.compute_conc_particle_interface(Y_0,params,extras_bar_K_interface);
-
-  GT1 = sne.compute_matrix_tensor_grad(Y_0,params); # testing
-  DT1 = sne.compute_matrix_tensor_div(Y_0,params); # testing
-  GV1 = sne.compute_matrix_vec_grad(Y_0,params); # testing
-  DV1 = sne.compute_matrix_vec_div(Y_0,params); # testing
-
-  GT2 = sne.compute_matrix_tensor_grad2(Y_0,params); # testing
-  DT2 = sne.compute_matrix_tensor_div2(Y_0,params); # testing
-  GV2 = sne.compute_matrix_vec_grad2(Y_0,params); # testing
-  DV2 = sne.compute_matrix_vec_div2(Y_0,params); # testing
-
-  # Laplacians
-  LLT2 = np.matmul(DT2,GT2); 
-  LLV2 = np.matmul(DV2,GV2); 
-
-  # Errors 
-  err_DT1_T__m__GT1 = np.max(np.abs(-DT1.T - GT1));
-  print("err_DT1_T__m__GT1 = %.2e"%err_DT1_T__m__GT1);
-  err_DT2_T__m__GT2 = np.max(np.abs(-DT2.T - GT2));
-  print("err_DT2_T__m__GT2 = %.2e"%err_DT2_T__m__GT2);
-  err_DV1_T__m__GV1 = np.max(np.abs(-DV1.T - GV1));
-  print("err_DV1_T__m__GV1 = %.2e"%err_DV1_T__m__GV1);
-  err_DV2_T__m__GV2 = np.max(np.abs(-DV2.T - GV2));
-  print("err_DV2_T__m__GV2 = %.2e"%err_DV2_T__m__GV2);
-
 
 # -- Integrator
 # Euler-Maruyama integrator
@@ -1651,10 +1489,6 @@ if trigger_post is None:
 
 if extras_trigger_post is None:
   extras_trigger_post = {};
-
-
-#update_state = update_state__Euler_Marayuma;
-#update_state = update_state__Euler_Heun;
 
 flag_test_B_j, = tuple(map(params.get,['flag_test_B_j']));
 if flag_test_B_j is None: flag_test_B_j = False; 
@@ -1705,18 +1539,6 @@ extras_update_state.update({'time_index':0,
                             'extras_bar_L':extras_bar_L,
                             'extras_g_thm':extras_g_thm,
                             'flag_save_data':True});
-
-
-# --- perform debugging tests
-
-# debugging div_K
-flag = False;
-if flag:
-  sne.test_div_K_j_set0(Y_0,params);
-
-flag = False;
-if flag:
-  sne.test_div_K_j_mc(Y_0,params);
 
 # --- start simulations 
 Y_np1 = np.zeros(Y_n.shape); # make array of the same shape  
