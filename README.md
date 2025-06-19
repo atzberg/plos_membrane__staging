@@ -2,29 +2,32 @@
 
 Simulation codes related to PLOS paper.
 
-__Install__
+__Installation__
 
-Install using 'pip' and 'python' version 12.1 or greater 
+To install use 'pip' and 'python' version 12.1 or greater 
 
 `
 cd ./src
 pip install -r requirements.txt
 `
 
-To test the installation can run 
+To test installation run 
 `
 python conc_field_01.py --help 
 `
 
-__Running Codes__ 
+__Running the Codes__ 
 
-Simulations can be run by using python
-parameter files found in the 
-./examples folder for each 
-model case. 
+Simulations can be run by using python parameter files found in the 
+./examples folder for each model.  This is done typically using 
+`
+cd ../../src
+python conc_field_01.py -p ../examples/<sim-name>/params.py
+`
+See the individual folders for more details. 
 
 __Additional Information__ 
 
-For papers and additional information on this
-and related methods, see https://atzberger.org.
+For papers and more information, 
+see https://atzberger.org.
 
