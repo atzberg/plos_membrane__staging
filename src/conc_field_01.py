@@ -1139,9 +1139,6 @@ flag_verbose = params['flag_verbose'];
 Y_I = create_Y_I(params);
 params.update({'Y_I':Y_I});
 
-bar_K_j_I = sne.get_bar_K_j_I(params); # get index table 
-params.update({'bar_K_j_I':bar_K_j_I});
-
 # parameters for time-step integration
 deltaT = params['deltaT']; num_timesteps = params['num_timesteps'];
 t_final = deltaT*num_timesteps; num_heat_bodies = len(params['c_v']);
