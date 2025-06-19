@@ -1,23 +1,30 @@
 #### Drift-Diffusion Membrane Protein Codes
 
-Simulation codes related to PLOS membrane paper.
+Simulation codes related to PLOS paper.
 
 __Install__
 
-Install Python version 12.1 or great.  
+Install using 'pip' and 'python' version 12.1 or greater 
 
 `
 cd ./src
 pip install -r requirements.txt
 `
 
-__Running Simulations__ 
+To test the installation can run 
+`
+python conc_field_01.py --help 
+`
 
-The simulations can be run by using python 
-in ./examples folder for each model case. 
+__Running Codes__ 
+
+Simulations can be run by using python
+parameter files found in the 
+./examples folder for each 
+model case. 
 
 __Additional Information__ 
 
-For additional information and papers on these methods, 
-see https://atzberger.org.
+For papers and additional information on this
+and related methods, see https://atzberger.org.
 
