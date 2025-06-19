@@ -1621,7 +1621,6 @@ def compute_B_j__conc_field(Y,params,extras):
   num_dim_sq = num_dim*num_dim; 
   k_B = params['k_B'];
   sqrt_two_k_B = np.sqrt(2.0*k_B);
-  flag_incompressible = params['flag_incompressible'];
 
   get_parts = params['func_get_parts'];
 
