@@ -1135,9 +1135,6 @@ np.seterr(invalid='raise');
 num_dim = params['num_dim'];
 flag_verbose = params['flag_verbose'];
 
-if params['flag_compute_div_K'] is False and params['flag_stochastic'] is True:
-  print("WARNING: flag_compute_div_K = " + str(params['flag_compute_div_K'])); 
-
 # indices 
 Y_I = create_Y_I(params);
 params.update({'Y_I':Y_I});
