@@ -1,6 +1,6 @@
 #### Drift-Diffusion Membrane Protein Codes
 
-Simulation codes related to PLOS paper.
+Simulation codes for PLOS paper.
 
 __Installation__
 
