@@ -291,8 +291,8 @@ def map_particle_periodic(Y,params):
   Y[I1_particle_q + 1] = np.mod(Y[I1_particle_q + 1],Ly);
 
 def compute_matrix_vec_div(Y,params,extras=None):
-  """ Divergence acting on vectors $v$ to produce scalar $a$, 
-      $a = div(v),\; a = \partial_{j} v_{j}$.
+  r""" Divergence acting on vectors $v$ to produce scalar $a$, 
+      $a = div(v), a = \partial_{j} v_{j}$.
   """
   # get params data 
   num_mesh_x,num_mesh_y,num_dim,deltaX \
@@ -346,7 +346,7 @@ def compute_matrix_vec_div(Y,params,extras=None):
   return D;
 
 def compute_matrix_vec_grad(Y,params,extras=None):
-  """ Gradient acting on scalar fields, such as $\nabla f$. """
+  r""" Gradient acting on scalar fields, such as $\nabla f$. """
 
   # get params data 
   num_mesh_x,num_mesh_y,num_dim,deltaX \
@@ -437,7 +437,7 @@ def peskin_delta(rr,extras=None):
   return w; 
 
 def compute_matrix_Gamma_op(Y,params,extras=None):
-  """ Compute the velocity averaging operator 
+  r""" Compute the velocity averaging operator 
       $V_f = \Gamma[\mb{u}]$ to obtain 
       a reference particle velocity from the 
       surrounding fluid environment. 
@@ -522,7 +522,7 @@ def compute_matrix_Gamma_op(Y,params,extras=None):
   return matrix_Gamma_op;
 
 def compute_matrix_Lambda_op(Y,params,extras=None):
-  """ Compute the force spreading operator 
+  r""" Compute the force spreading operator 
       $\mb{f} = \Lambda[\mb{F}]$ to obtain 
       a force density of the particle acting on 
       the surrounding fluid environment. 
@@ -1383,7 +1383,7 @@ def compute_bar_K_j_conc(Y,params,extras):
   return bar_K_j_list,bar_K_j_indices; 
 
 def compute_R_ovd_particle(Y,params,extras=None):
-  """ R_ovd factor so that R_ovd*R_ovd^T = K_ovdc
+  r""" R_ovd factor so that R_ovd*R_ovd^T = K_ovdc
   used for computing thermal fluctuations for particles.
   """ 
   gamma_particle,Y_I = tuple(map(params.get,['gamma_particle','Y_I']));
@@ -1409,7 +1409,7 @@ def compute_R_ovd_particle(Y,params,extras=None):
   return R_ovd; 
 
 def compute_R_ovdc(Y,params,extras=None):
-  """ R_ovdc factor so that R_ovdc*R_ovdc^T = K_ovdc
+  r""" R_ovdc factor so that R_ovdc*R_ovdc^T = K_ovdc
   used for computing thermal fluctuations of concentration fields.
   """ 
   bar_kappa,c0_conc,Y_I = tuple(map(params.get,['bar_kappa','c0_conc','Y_I']));
@@ -1474,7 +1474,7 @@ def compute_R_ovdc(Y,params,extras=None):
   return R_ovdc; 
 
 def compute_R_heat2__conc(Y,params,extras):
-  """ Compute the factor $K_heat = RR^T$. """
+  r""" Compute the factor $K_heat = RR^T$. """
 
   # get params data
   kappa_C_C,c0_conc,num_mesh_x,num_mesh_y,num_dim,c_v,c_v_I,deltaX,mu,Y_I = \
