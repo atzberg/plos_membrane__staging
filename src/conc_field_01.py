@@ -53,22 +53,6 @@ def get_parts(Y,params):
 
   return dd;
 
-def print_near_zero_warnings(params):
-
-  check_list = ['mu','gamma','kappa_C_I','kappa_P_I','kappa_0']; 
-  flag_warn = False; warn_list = []; epsilon = 1e-10;
-  for key in check_list:
-    val = params[key];
-    if val <= epsilon:
-      warn_list.append(key);
-      flag_warn = True;
-
-  if flag_warn:
-    print("");
-    print("Warning: The following parameter values are close to zero (< %.1e)."%epsilon);
-    print(str(warn_list)); 
-    print("");
-
 def phi_energy__eta_gauss_01(Y,extras):
   params,k1,sigma_sq,flag_compute_grad = \
     tuple(map(extras.get,['params','k1','sigma_sq',
@@ -1147,8 +1131,6 @@ params.update({'base_name':base_name,
 
 
 np.seterr(invalid='raise');
-
-print_near_zero_warnings(params);
 
 num_dim = params['num_dim'];
 flag_verbose = params['flag_verbose'];
