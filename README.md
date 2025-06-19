@@ -19,13 +19,13 @@ python conc_field_01.py --help
 __Running the Codes__ 
 
 Simulations can be run by using python parameter files found in the 
-./examples folder for each model.  This is done typically using 
+./examples folder for each model.  This is typically of the form
 ```
 cd ../../src
-python conc_field_01.py -p ../examples/<sim-name>/params.py`
+python conc_field_01.py -p ../examples/<sim-name>/params.py
 ```
 
-See the individual folders for more details. 
+For more details, see the individual folders.
 
 __Additional Information__ 
 
