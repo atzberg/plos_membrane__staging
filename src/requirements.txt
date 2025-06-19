@@ -1,7 +1,3 @@
 # packages 
-numpy
-pickle
-ipdb
-shutil
-argparse
-vtk
+numpy>=1.26.0
+vtk>=9.1.0
