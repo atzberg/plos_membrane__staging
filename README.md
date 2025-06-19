@@ -8,7 +8,7 @@ To install use 'pip' and 'python' version 12.1 or greater
 
 ```
 cd ./src
-pip install -r requirements.txt`
+pip install -r requirements.txt
 ```
 
 To test installation run 
