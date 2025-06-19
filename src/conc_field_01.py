@@ -912,10 +912,10 @@ def process_func_key(params,f_key,loc=None,flag_extras_params=False):
     f_str = params[f_key];
     if f_str in loc:
       cmd_str = "ff = loc['%s']"%f_str;
-      exec(cmd_str);
+      exec(cmd_str,globals(),loc);
     else: 
       cmd_str = "ff = %s"%f_str;
-      exec(cmd_str);
+      exec(cmd_str,globals(),loc);
     cmd_str = "params['%s'] = ff"%(func_key);
     exec(cmd_str); # execute the command (to set function) 
 
@@ -924,7 +924,7 @@ def process_func_key(params,f_key,loc=None,flag_extras_params=False):
       params[extras_key].update({'params':params});        
   else: # if key not in params set the function to None
     cmd_str = "params['%s'] = None"%(func_key);
-    exec(cmd_str); # execute the command (to set function) 
+    exec(cmd_str,globals(),loc); # execute the command (to set function) 
 
 def update_state__Euler_Heun(Y_n,params,extras):
 
