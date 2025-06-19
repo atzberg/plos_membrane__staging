@@ -2,6 +2,6 @@
 
 cd ../../src
 
-python conc_grad_01.py -p ../examples/conc_grad_01/params.py 
+python conc_field_01.py -p ../examples/conc_grad_01/params.py 
 
 
