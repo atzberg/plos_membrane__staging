@@ -911,7 +911,7 @@ def process_func_key(params,f_key,loc=None,flag_extras_params=False):
   if f_key in params: # set the function reference 
     f_str = params[f_key];
     if f_str in loc:
-      cmd_str = "ff = loc['%s']"%f_str;
+      cmd_str = "ll=locals();ff = ll['%s']"%f_str;
       exec(cmd_str,globals(),loc);
     else: 
       cmd_str = "ff = %s"%f_str;
