@@ -1,4 +1,4 @@
-#### Drift-Diffusion Membrane Protein Codes
+#### Drift-Diffusion Membrane-Protein Codes
 
 Simulation codes for PLOS paper.
 
