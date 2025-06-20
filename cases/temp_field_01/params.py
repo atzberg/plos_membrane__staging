@@ -3,7 +3,7 @@ params = {};
 
 script_basename = 'conc_field_01';
 
-base_name = 'receptors'; run_index = 32; 
+base_name = 'temp_field'; run_index = 1; 
 run_name = '%s_%.4d'%(base_name,run_index);
 base_dir = './output/%s/%s'%(script_basename,run_name);
 
