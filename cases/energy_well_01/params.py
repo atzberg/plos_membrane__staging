@@ -3,7 +3,7 @@ params = {};
 
 script_basename = 'conc_field_01';
 
-base_name = "energy_well_11_KBT_001500en7"; run_index = 5; 
+base_name = "energy_well"; run_index = 1; 
 run_name = '%s__%.4d'%(base_name,run_index);
 base_dir = './output/%s/%s'%(script_basename,run_name);
 
